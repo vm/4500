@@ -15,7 +15,7 @@ Card = namedtuple('Card', ['face', 'bull'])
 # bull is an int for the bull value of a card
 
 class BasePlayer:
-    """base class for a BasePlayer"""
+    """base class for a player"""
 
     def __init__(self):
         """creates a BasePlayer
@@ -27,11 +27,14 @@ class BasePlayer:
         self._hand = []
         self._points = 0
 
-    def pick_card(self, stacks):
+    def pick_card(self, stacks, opponent_points):
         """picks a card to play and removes it from the player's hand
 
         :param stacks: current state of the stacks in the game
         :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
 
         :returns: card to play from the player's hand
         :rtype: Card
@@ -40,11 +43,17 @@ class BasePlayer:
         # to be implemented by Foomanistani programmers
         raise NotImplementedError()
 
-    def pick_stack(self, stacks):
+    def pick_stack(self, stacks, opponent_points, remaining_cards):
         """chooses a stack to pick up
 
         :param stacks: current state of the stacks in the game
         :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :param remaining_cards: discarded cards yet to be played in the turn
+        :type remaining_cards: list of Card
 
         :returns: index of the stack to pick up
         :rtype: int
