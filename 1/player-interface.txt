@@ -1,0 +1,84 @@
+"""
+This doc specifies the interface for a player.
+
+Implementers should inhereit from the BasePlayer class and override the
+following methods:
+    - pick_card
+    - pick_stack
+"""
+
+from collections import namedtuple
+
+Card = namedtuple('Card', ['face', 'bull'])
+# represents a single card
+# face is an int for the face value of a card
+# bull is an int for the bull value of a card
+
+class BasePlayer:
+    """base class for a BasePlayer"""
+
+    def __init__(self):
+        """creates a BasePlayer
+
+        _hand represents the hand of the player and is a list of Card
+        _points represents how many points the player has and is an int
+        """
+
+        self._hand = []
+        self._points = 0
+
+    def pick_card(self, stacks):
+        """picks a card to play and removes it from the player's hand
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :returns: card to play from the player's hand
+        :rtype: Card
+        """
+
+        # to be implemented by Foomanistani programmers
+        raise NotImplementedError()
+
+    def pick_stack(self, stacks):
+        """chooses a stack to pick up
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :returns: index of the stack to pick up
+        :rtype: int
+        """
+
+        # to be implemented by Foomanistani programmers
+        raise NotImplementedError()
+
+    def set_hand(self, new_hand):
+        """sets the hand of the player to the new hand
+
+        :param new_hand: new hand for the player
+        :type new_hand: list of Card
+        """
+
+        self._hand = new_hand
+
+    def get_points(self):
+        """gets the player's current points
+
+        :returns: current number of points for a player
+        :rtype: int
+        """
+
+        return self._points
+
+    def remove_points(self, num_points):
+        """removes points from the player
+
+        :param num_points: non-negative number of points to remove
+        :type num_points: int
+        """
+
+        if num_points < 0:
+            raise ValueError("num_points must be greater than or equal to 0")
+
+        self._points -= num_points
