@@ -1,0 +1,132 @@
+'''
+This document specifies the interfaces for the Player of 6 Nimmt!
+'''
+
+class MainProgram:
+	# Processes the command line number of players and kicks off the game
+	# if a strategy is to be assigned to a player, it assigns it
+	# prints out a string containing the leaderboard once the game has finished
+	# runProgram: Nat -> String
+	def runProgram(self, numPlayers):
+		# create a dealer, then create n players (assigning strategies if needed)
+		return dealer.playGame(players)
+		
+
+class Dealer:
+	NUM_CARDS = 104
+	
+	deck = Deck(NUM_CARDS)
+	board = Board()
+	
+	# Keeps track of the players, manages rounds and turns,
+	# and creates + returns the leaderboard 
+	# playGame: ArrayOfPlayer -> String
+	def playGame(self, players):
+		gameOver = False
+		
+		# runs rounds; will break when setting bullPoints <= 66 or 0 cards remain
+		while not gameOver:
+			# reset board, create four stacks, reshuffles deck from scratch
+
+			# deal cards
+			for player in players:
+				# deal ten cards to that player
+			
+			# run all ten turns in a round
+			for i in range(10):
+				for player in players:
+					# player chooses their card
+			
+			# place all cards on the gameboard in ascending order by size of card
+				
+			# if any players' bullpoints <= 0, then set gameOver to True
+
+						
+	# deck is shuffled at generation time, so just deals the top ten cards
+	# dealTen: Void -> ArrayOfCard
+	def dealTen(self):
+		# pull ten cards from the head of the deck
+		
+
+class Player:
+	# defaults: invalid playerNum, most basic strategy, 
+	#           no bull points this round, not been dealt cards
+	playerNum = -1
+	strategy = 0
+	bullPoints = 0
+	cards = []
+	
+	# Creates a player by assigning it a number (and, if applicable, a strategy)
+	# __init__: Player, Nat, [Optional: Nat] -> Player
+	def __init__(self, playerNum, strategy=None):
+		# set a player number and, if given, a strategy
+	
+	# places a card in hand on board based on the defined strategy
+	# chooseCard: Player, Board -> Tuple(Card, Nat)
+	def chooseCard(self, board):
+		# do some calculations based on self.cards, self.strategy, and board
+	
+	# addBullPoints: Player, Nat -> Void
+	def addBullPoints(self, n):
+		# increment bullpoints by n
+		
+class GameBoard:
+	stacks = []
+
+	# creates an initial GameBoard state with the given four stack starters
+	# __init__: ArrayOfCards -> GameBoard
+	def __init__(self, stackCards):
+		for card in stackCards:
+			# add a new stack made with that card to the stacks field
+	
+	# performs the move that the player wants to make
+	# will allocate bullpoints if the player gains any from this move
+	# placeCard: ListOf(Tuple(Player, Card)) -> Void
+	def placeCards(self, cards):
+		# place cards in ascending order, clear stacks when necessary,
+		# and allocate points to their player if gained/lost
+	
+	# clearStack: Player, Card, Nat -> Void
+	def clearStack(self, player, card, stackIdx):
+		# clear given stack, allocate points to the player, and place that card in
+		# a new stack in the old stack's place
+	
+	
+class Stack:
+	cards = []
+	
+	# creates a new stack with the given card at the head
+	# __init__: Card -> Stack
+	def __init__(self, card):
+		# add the card to the head of the array
+	
+	# addToStack: Card -> Void
+	def addToStack(self, card):
+		# add to the tail of the array (which may be index 0 if array is empty)
+
+	# getBullPoints: Void -> Nat
+	def getBullPoints(self):
+		# tally up the bullpoints of the cards in this stack
+		
+	# getNumCards: Void -> Nat
+	def getNumCards(self):
+		# get the number of cards in this stack
+		
+
+class Card:
+	faceValue = 0
+	bullPoints = 0
+	
+	# Instantiates card with a face value and bullpoints
+	# __init__: Nat, Nat -> Card
+	def __init__(faceValue, bullPoints):
+		# set the fields to the given values
+
+class Deck: 
+	cards = []
+	
+	# Creates a shuffled deck of numCards length
+	# __init__: Nat -> Void
+	def __init__(self, numCards):
+		# create a deck of Cards of this number of cards,
+		# allocating the proper number of bullpoints to each
