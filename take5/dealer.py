@@ -25,7 +25,11 @@ class Dealer:
             if len(initial_deck) != expected_deck_len:
                 raise ValueError('Incorrect deck size')
 
-            if not set(card.face for card in initial_deck) == set(range(1, 105)):
+            faces = set(card.face for card in initial_deck)
+            if not len(faces) == len(initial_deck):
+                ValueError('Contains two cards with the same face value')
+
+            if not faces == set(range(1, 105)):
                 raise ValueError('Must have only one of every face value')
 
             self._initial_deck = full_deck
