@@ -178,9 +178,17 @@ class Dealer:
         return any(player.points <= -66 for player in self.players)
 
     def deal_hand(self):
+        """sets the hand of the player to the first 10 cards of the deck
 
-        # todo add error if deck is None or not enough cards
-        raise NotImplementedError('meow')
+        :returns: hand to set to a player
+        :rtype: list of Card
+        """
+
+        if self._deck is None or if len(self._deck) < 10:
+            raise ValueError('invalid deck')
+
+        hand = self._deck[:9]
+        self._deck = self._deck[10:]
 
     def create_stacks(self):
         """creates new stacks
