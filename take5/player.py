@@ -1,0 +1,138 @@
+"""
+This doc specifies the interface for a player.
+
+Implementers should inhereit from the BasePlayer class and override the
+following methods:
+    - pick_card
+    - pick_stack
+"""
+
+from collections import namedtuple
+
+Card = namedtuple('Card', ['face', 'bull'])
+# represents a single card
+# face is an int for the face value of a card
+# bull is an int for the bull value of a card
+
+class BasePlayer:
+    """base class for a player"""
+
+    def __init__(self):
+        """creates a BasePlayer
+
+        _hand represents the hand of the player and is a list of Card
+        _points represents how many points the player has and is an int
+        """
+
+        self._hand = []
+        self._points = 0
+
+    def pick_card(self, stacks, opponent_points):
+        """picks a card to play and removes it from the player's hand
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :returns: card to play from the player's hand
+        :rtype: Card
+        """
+
+        # to be implemented by Foomanistani programmers
+        raise NotImplementedError()
+
+    def pick_stack(self, stacks, opponent_points, remaining_cards):
+        """chooses a stack to pick up
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :param remaining_cards: cards yet to be played in the turn
+        :type remaining_cards: list of Card
+
+        :returns: index of the stack to pick up
+        :rtype: int
+        """
+
+        # to be implemented by Foomanistani programmers
+        raise NotImplementedError()
+
+    def set_hand(self, new_hand):
+        """sets the hand of the player to the new hand
+
+        :param new_hand: new hand for the player
+        :type new_hand: list of Card
+        """
+
+        self._hand = new_hand
+
+    def get_num_cards_in_hand(self):
+        """gets the number of cards in a player's hand
+
+        :returns: number of cards in player hand
+        :rtype: int
+        """
+
+        return len(self._hand)
+
+    def get_points(self):
+        """gets the player's current points
+
+        :returns: current number of points for a player
+        :rtype: int
+        """
+
+        return self._points
+
+    def remove_points(self, num_points):
+        """removes points from the player
+
+        :param num_points: non-negative number of points to remove
+        :type num_points: int
+        """
+
+        if num_points < 0:
+            raise ValueError("num_points must be greater than or equal to 0")
+
+        self._points -= num_points
+
+class DemoPlayer(BasePlayer):
+    """demo implementation of a player"""
+
+    def pick_card(self, stacks, opponent_points):
+        """picks a card to play and removes it from the player's hand
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :returns: card to play from the player's hand
+        :rtype: Card
+        """
+
+        return self._hand.pop(0)
+
+    def pick_stack(self, stacks, opponent_points, remaining_cards):
+        """chooses a stack to pick up
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :param remaining_cards: cards yet to be played in the turn
+        :type remaining_cards: list of Card
+
+        :returns: index of the stack to pick up
+        :rtype: int
+        """
+
+        return 0
