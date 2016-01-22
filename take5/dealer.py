@@ -16,11 +16,13 @@ class Dealer:
         :type players: list of BasePlayer
         """
 
+        expected_deck_len = 104
+
         if len(players) < 2 or len(players) > 10:
             raise ValueError('number of players must be in interval [2, 10]')
 
         if initial_deck is None:
-            self._initial_deck = [Card(i, (i % 6) + 2) for i in range(1, 105)]
+            self._initial_deck = [Card(i, (i%6) + 2) for i in range(1, 105)]
         else:
             if len(initial_deck) != expected_deck_len:
                 raise ValueError('Incorrect deck size')
@@ -32,7 +34,10 @@ class Dealer:
             if not faces == set(range(1, 105)):
                 raise ValueError('Must have only one of every face value')
 
-            self._initial_deck = full_deck
+            if any(card.bull < 2 or card.bull > 7 for card in initial_deck):
+                raise ValueError('Deck bull values must be in interval [2,7]')
+
+            self._initial_deck = initial_deck
 
         self.players = players
         self._deck = None
@@ -61,14 +66,25 @@ class Dealer:
         self._stacks = self.create_stacks()
 
         while self.players_have_cards():
+#            import pdb; pdb.set_trace()
             self.play_turn()
+
+    def players_have_cards(self):
+        """determines whether players still have cards
+
+        assumes players have the same number of cards at the start of the turn
+
+        :returns: whether players have cards
+        :rtype: bool
+        """
+
+        return any(p.get_num_cards_in_hand() > 0 for p in self.players)
 
     def play_turn(self):
         """plays a single turn"""
 
-        opponent_points = get_opponent_points(self.players)
-        discarded_cards = self.get_discarded_cards(opponent_points)
-        self.place_cards_on_stacks(discarded_cards, opponent_points)
+        discarded_cards = self.get_discarded_cards()
+        self.place_cards_on_stacks(discarded_cards)
 
     def place_cards_on_stacks(self, discarded_cards):
         """places the given cards on the stacks and removes points if necessary
@@ -78,22 +94,44 @@ class Dealer:
         """
 
         ordered_player_names = self.get_card_placement_order(discarded_cards)
+        all_opponent_points = self.get_opponent_points(self.players)
+        remaining_cards = {i: c for i, c in enumerate(discarded_cards)}
 
         for player_name in ordered_player_names:
-            card, player = discarded_cards[player_name], self.players[player_name]
-            self._stacks = place_card_on_stacks(self._stacks)
+            card = discarded_cards[player_name]
+            player = self.players[player_name]
 
-    @staticmethod
-    def place_card_on_stacks(player, card, stacks):
-        """places a player's card on the stacks and adjust points. if any of
-        the cards on top of the stacks are greater than card, TODO(DO STUFF)
+            opponent_points = all_opponent_points[player_name]
+            del remaining_cards[player_name]
+
+            self._stacks = self.place_card_on_stacks(
+                    player, card, self._stacks,
+                    opponent_points, remaining_cards.values())
+
+    def place_card_on_stacks(
+            self, player, card, stacks, opponent_points, remaining_cards):
+        """places a player's card on the stacks and adjust points
+
+        places card on stacks with closest smaller top card
+        if this stack has 5 cards, the player loses the sum of the bull points
+
+        if no top cards are smaller, player chooses a stack to place on
+        the player loses the sum of the bull points in this stack
 
         :param player: the player whose card is getting places on the stacks
         :type player: BasePlayer
+
         :param card: the card to be placed
         :type card: Card
+
         :param stacks: the stacks of cards
         :type stacks: list of list of Card
+
+        :param opponent_points: points of opponents
+        :type opponent_points: list of int
+
+        :param remaining_cards: discarded cards yet to be played
+        :type remaining_cards: list of Card
 
         :returns: the updated stacks
         :rtype: list of list of Card
@@ -102,11 +140,8 @@ class Dealer:
         closest_smaller_card_stack = self.get_closest_smaller_card(card, stacks)
 
         if closest_smaller_card_stack is None:
-            opponent_points = toeuoeiajroairj
-            remaining_cards = eoitiojt
             chosen_stack_index = player.pick_stack(
                 stacks, opponent_points, remaining_cards)
-
         else:
             chosen_stack = stacks[closest_smaller_card_stack]
             if len(chosen_stack) == 5:
@@ -119,18 +154,16 @@ class Dealer:
 
     @staticmethod
     def get_closest_smaller_card(card, stacks):
-        """checks the first card of every stack and returns the index of the
-        stack whose first face value is smaller than and closest to the given
-        card
+        """gets index of stack whose top card is smaller and closest to card
 
         :param card: card to place on stack
         :type card: Card
+
         :param stacks: stacks to choose from
         :type stacks: list of list of Card
 
-        :returns: index of stack to place card on if there any of the top cards
-            have a smaller face value
-        :rtype: None or int
+        :returns: index of stack if any cards are smaller else None
+        :rtype: int or None
         """
 
         first_of_stacks = [s[0] for s in stacks]
@@ -163,14 +196,10 @@ class Dealer:
 
         all_opponent_points = []
         for i in range(len(players)):
-            opponent_points = self.exclude_item(i, all_points)
+            opponent_points = all_points[:i] + all_points[i+1:]
             all_opponent_points.append(opponent_points)
 
         return all_opponent_points
-
-    @staticmethod
-    def exclude_item(i, xs):
-        return xs.pop(i)
 
     def is_game_over(self):
         """says if the game is over now
@@ -179,7 +208,7 @@ class Dealer:
         :rtype: bool
         """
 
-        return any(player.points <= -66 for player in self.players)
+        return any(player.get_points() <= -66 for player in self.players)
 
     def deal_hand(self):
         """sets the hand of the player to the first 10 cards of the deck
@@ -188,11 +217,15 @@ class Dealer:
         :rtype: list of Card
         """
 
-        if self._deck is None or if len(self._deck) < 10:
+        cards_in_hand = 10
+
+        if self._deck is None or len(self._deck) < cards_in_hand:
             raise ValueError('invalid deck')
 
-        hand = self._deck[:9]
-        self._deck = self._deck[10:]
+        hand = self._deck[:cards_in_hand]
+        self._deck = self._deck[cards_in_hand:]
+
+        return hand
 
     def create_stacks(self):
         """creates new stacks
@@ -201,7 +234,12 @@ class Dealer:
         :rtype: list of list of Card
         """
 
-        raise NotImplementedError('meow')
+        num_stacks = 4
+
+        stack_cards = self._deck[:num_stacks]
+        self._deck = self._deck[num_stacks:]
+
+        return [[c] for c in stack_cards]
 
     @staticmethod
     def get_card_placement_order(cards):
@@ -214,7 +252,7 @@ class Dealer:
         :rtype: list of int
         """
 
-        return sorted(range(len(cards)), lambda i: cards[i].face)
+        return sorted(range(len(cards)), key=lambda i: cards[i].face)
 
     def get_discarded_cards(self):
         """gathers discarded cards from players
@@ -223,16 +261,35 @@ class Dealer:
         :rtype: list of Card
         """
 
-        all_opponent_points = self.get_opponent_points(self._players)
+        all_opponent_points = self.get_opponent_points(self.players)
 
         discarded_cards = []
         for i, player in enumerate(self.players):
             opponent_points = all_opponent_points[i]
 
-            card = player.pick_cards(stacks, opponent_points)
+            card = player.pick_card(self._stacks, opponent_points)
             discarded_cards.append(card)
 
         return discarded_cards
 
     def get_results(self):
-        raise NotImplementedError('meow')
+        """gets results at the end of a game
+
+        :returns: (winning player name, points of winning player)
+        :rtype: 2-tuple of (int, int)
+        """
+
+        if not self.is_game_over():
+            raise Exception('game must be over to use this method')
+
+        winning_player_name  = None
+        winning_player_points = float('inf')
+
+        for i,p in enumerate(self.players):
+            player_points = p.get_points()
+
+            if player_points < winning_player_points:
+                winning_player_name = i
+                winning_player_points = player_points
+
+        return winning_player_name, winning_player_points

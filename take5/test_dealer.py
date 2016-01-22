@@ -5,7 +5,8 @@ from player import Card, BasePlayer
 
 class MockPlayer(BasePlayer):
     def pick_card(self, stacks, opponent_points):
-        return self._hand[0]
+
+        return self._hand.pop(0)
 
     def pick_stacks(self, stacks, opponent_points, remaining_cards):
         return 0
@@ -25,7 +26,7 @@ def test_dealer_creation():
     low_valid_players = [MockPlayer() for _ in range(2)]
     Dealer(low_valid_players)
 
-    high_valid_players = [MockPlayer() for _ in range(11)]
+    high_valid_players = [MockPlayer() for _ in range(10)]
     Dealer(high_valid_players)
 
     valid_deck = [Card(i, (i%6) + 2) for i in range(1, 105)]
@@ -44,7 +45,8 @@ def test_dealer_creation():
         Dealer(high_valid_players, wrong_bull_values_deck)
 
     d = Dealer(high_valid_players)
-    assert d.deck == valid_deck
+    assert d._initial_deck == valid_deck
+
 
 def test_simulate_game():
     """tests that the dealer properly simulates a game"""
@@ -52,10 +54,8 @@ def test_simulate_game():
     players = [MockPlayer() for _ in range(4)]
     dealer = Dealer(players)
 
-    winning_player = dealer.simulate_game()
+    winning_player_name, winning_player_points = dealer.simulate_game()
     min_winning_score = -66
 
-    assert winning_player in players
-    assert winning_player.get_points() <= min_winning_score
-    assert min(dealer.players, key=lambda p: p.get_points()) == winning_player
+    assert winning_player_points <= min_winning_score
     assert all(p.get_points() <= 0 for p in dealer.players)
