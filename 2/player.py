@@ -1,9 +1,9 @@
 # The specification mentioned that this team wanted to place initial values on
-# the class and modify that. However, this is not ideal since for any mutable
+# the class and modify that. This is not ideal since for any mutable
 # data structures (list for example), each new class gets the same reference to
-# that list. Therefore, all operations are done on the same list, not on a list
-# per instance. However, since this is what the specification asked for we have
-# implemented it that way.
+# that list and all operations are done on the same list, not on a list
+# per instance. As this is what the specification asked for we have
+# implemented it as provided.
 class Player:
     playerNum = -1
     strategy = 0
@@ -35,7 +35,7 @@ class Player:
     # This was not specified in the specification, but it's impossible to play
     # the game without it, as stack selection is only done on certain cases
     # and after all players have discarded cards (so cannot be selected in
-    # chooseCard. Therefore, we implement this here, with stacks being passed
+    # chooseCard). We implement this here, with stacks being passed
     # in as an argument.
     def chooseStack(self, stacks):
         """select a stack to place a card on
@@ -51,5 +51,3 @@ class Player:
             return sum(card.BullPoints for card in stacks[i])
 
         return min(range(len(stacks)), key=sumStackBullPoints)
-
-
