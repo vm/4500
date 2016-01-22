@@ -84,9 +84,9 @@ class Dealer:
         """plays a single turn"""
 
         discarded_cards = self.get_discarded_cards()
-        self.place_cards_on_stacks(discarded_cards)
+        self.add_all_cards_to_stacks(discarded_cards)
 
-    def place_cards_on_stacks(self, discarded_cards):
+    def add_all_cards_to_stacks(self, discarded_cards):
         """places the given cards on the stacks and removes points if necessary
 
         :param discarded_cards: cards to discard, ordered the same as players
@@ -104,12 +104,11 @@ class Dealer:
             opponent_points = all_opponent_points[player_name]
             del remaining_cards[player_name]
 
-            self._stacks = self.place_card_on_stacks(
-                    player, card, self._stacks,
-                    opponent_points, remaining_cards.values())
+            self.add_card_to_stacks(
+                player, card, opponent_points, remaining_cards.values())
 
-    def place_card_on_stacks(
-            self, player, card, stacks, opponent_points, remaining_cards):
+    def add_card_to_stacks(
+            self, player, card, opponent_points, remaining_cards):
         """places a player's card on the stacks and adjust points
 
         places card on stacks with closest smaller top card
@@ -124,34 +123,26 @@ class Dealer:
         :param card: the card to be placed
         :type card: Card
 
-        :param stacks: the stacks of cards
-        :type stacks: list of list of Card
-
         :param opponent_points: points of opponents
         :type opponent_points: list of int
 
         :param remaining_cards: discarded cards yet to be played
         :type remaining_cards: list of Card
-
-        :returns: the updated stacks
-        :rtype: list of list of Card
         """
 
         closest_smaller_card_stack = self.get_closest_smaller_card(
-            card, stacks)
+            card, self._stacks)
 
         if closest_smaller_card_stack is None:
             chosen_stack_index = player.pick_stack(
-                stacks, opponent_points, remaining_cards)
+                self._stacks, opponent_points, remaining_cards)
         else:
-            chosen_stack = stacks[closest_smaller_card_stack]
+            chosen_stack = self._stacks[closest_smaller_card_stack]
             if len(chosen_stack) == 5:
                 player.remove_points(sum(c.bull for c in chosen_stack))
                 chosen_stack = [card]
             else:
                 chosen_stack.insert(0, card)
-
-        return stacks
 
     @staticmethod
     def get_closest_smaller_card(card, stacks):
