@@ -100,3 +100,39 @@ class BasePlayer:
             raise ValueError("num_points must be greater than or equal to 0")
 
         self._points -= num_points
+
+class DemoPlayer(BasePlayer):
+    """demo implementation of a player"""
+
+    def pick_card(self, stacks, opponent_points):
+        """picks a card to play and removes it from the player's hand
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :returns: card to play from the player's hand
+        :rtype: Card
+        """
+
+        return self._hand.pop(0)
+
+    def pick_stack(self, stacks, opponent_points, remaining_cards):
+        """chooses a stack to pick up
+
+        :param stacks: current state of the stacks in the game
+        :type stacks: list of list of Card
+
+        :param opponent_points: number of points each opponent has
+        :type opponent_points: list of int
+
+        :param remaining_cards: cards yet to be played in the turn
+        :type remaining_cards: list of Card
+
+        :returns: index of the stack to pick up
+        :rtype: int
+        """
+
+        return 0

@@ -9,17 +9,25 @@ class Dealer:
     :inv: _initial_deck is immutable
     """
 
-    def __init__(self, players, initial_deck=None):
+    def __init__(self, players, initial_deck=None, card_handout_order=None):
         """creates a Dealer
 
         :param players: players to play the game.
         :type players: list of BasePlayer
+
+        :param initial_deck: cards making up a deck
+        :type initial_deck: list of Card or None
+
+        :param card_handout_order: order in which cards are handed to players
+        :type card_handout_order: list of int or None
         """
 
         expected_deck_len = 104
 
         if len(players) < 2 or len(players) > 10:
             raise ValueError('number of players must be in interval [2, 10]')
+
+        self.players = players
 
         if initial_deck is None:
             self._initial_deck = [Card(i, (i % 6) + 2) for i in range(1, 105)]
@@ -39,7 +47,19 @@ class Dealer:
 
             self._initial_deck = initial_deck
 
-        self.players = players
+        if card_handout_order is None:
+            self._card_handout_order = range(len(self.players))
+        else:
+            if len(card_handout_order) != len(self.players):
+                raise ValueError("card handout order must"
+                                 "match size of players")
+
+            if set(card_handout_order) != set(range(len(self.players))):
+                raise ValueError("card handout order must contain "
+                                 "one and only one of each player name")
+
+            self._card_handout_order = card_handout_order
+
         self._deck = None
         self._stacks = None
 
@@ -61,24 +81,28 @@ class Dealer:
         self._deck = self._initial_deck[:]
         random.shuffle(self._deck)
 
-        for player in self.players:
-            player.set_hand(self.deal_hand())
+        for player_name in self._card_handout_order:
+            self.players[player_name].set_hand(self.deal_hand())
 
-        self._stacks = self.create_stacks()
+        self._stacks = self.get_new_stacks()
 
-        while self.players_have_cards():
+        while self.players_have_cards(self.players):
             self.play_turn()
 
-    def players_have_cards(self):
+    @staticmethod
+    def players_have_cards(players):
         """determines whether players still have cards
 
         assumes players have the same number of cards at the start of the turn
+
+        :param players: players to check
+        :type players: list of BasePlayer
 
         :returns: whether players have cards
         :rtype: bool
         """
 
-        return any(p.get_num_cards_in_hand() > 0 for p in self.players)
+        return any(p.get_num_cards_in_hand() > 0 for p in players)
 
     def play_turn(self):
         """plays a single turn"""
@@ -136,13 +160,18 @@ class Dealer:
         if closest_smaller_card_stack is None:
             chosen_stack_index = player.pick_stack(
                 self._stacks, opponent_points, remaining_cards)
+
+            chosen_stack = self._stacks[chosen_stack_index]
+            player.remove_points(sum(c.bull for c in chosen_stack))
+            self._stacks[chosen_stack_index] = [card]
+
         else:
             chosen_stack = self._stacks[closest_smaller_card_stack]
             if len(chosen_stack) == 5:
                 player.remove_points(sum(c.bull for c in chosen_stack))
-                chosen_stack = [card]
+                self._stacks[closest_smaller_card_stack] = [card]
             else:
-                chosen_stack.insert(0, card)
+                self._stacks[closest_smaller_card_stack].insert(0, card)
 
     @staticmethod
     def get_closest_smaller_card(card, stacks):
@@ -204,7 +233,7 @@ class Dealer:
         return any(player.get_points() <= -66 for player in self.players)
 
     def deal_hand(self):
-        """sets the hand of the player to the first 10 cards of the deck
+        """gets the first 10 cards of the deck
 
         :returns: hand to set to a player
         :rtype: list of Card
@@ -220,7 +249,7 @@ class Dealer:
 
         return hand
 
-    def create_stacks(self):
+    def get_new_stacks(self):
         """creates new stacks
 
         :returns: 4 new stacks with 1 card in each
@@ -266,23 +295,12 @@ class Dealer:
         return discarded_cards
 
     def get_results(self):
-        """gets results at the end of a game
+        """gets index numbers and points for players in increasing order
 
-        :returns: (winning player name, points of winning player)
-        :rtype: 2-tuple of (int, int)
+        :returns: list of (winning player name, points of winning player)
+        :rtype: list of (int, int)
         """
 
-        if not self.is_game_over():
-            raise Exception('game must be over to use this method')
-
-        winning_player_name = None
-        winning_player_points = float('inf')
-
-        for i, player in enumerate(self.players):
-            player_points = player.get_points()
-
-            if player_points < winning_player_points:
-                winning_player_name = i
-                winning_player_points = player_points
-
-        return winning_player_name, winning_player_points
+        return sorted(
+            [(i, p.get_points()) for i, p in enumerate(self.players)],
+            key=lambda x: x[1])
