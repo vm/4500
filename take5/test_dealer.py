@@ -8,7 +8,7 @@ class MockPlayer(BasePlayer):
 
         return self._hand.pop(0)
 
-    def pick_stacks(self, stacks, opponent_points, remaining_cards):
+    def pick_stack(self, stacks, opponent_points, remaining_cards):
         return 0
 
 
@@ -46,6 +46,33 @@ def test_dealer_creation():
 
     d = Dealer(high_valid_players)
     assert d._initial_deck == valid_deck
+
+
+def test_get_closest_smaller_card():
+    d = Dealer([MockPlayer(), MockPlayer()])
+
+    stacks = [[Card(4, 1)], [Card(5, 1)], [Card(6, 1)], [Card(7, 1)]]
+    card = Card(3, 4)
+    assert d.get_closest_smaller_card(card, stacks) is None
+
+    stacks[0] = [Card(2, 1)]
+    assert d.get_closest_smaller_card(card, stacks) == 0
+
+
+def test_get_opponent_points():
+    players = [MockPlayer(), MockPlayer()]
+    players[0].remove_points(10)
+    players[1].remove_points(3)
+    d = Dealer(players)
+
+    assert d.get_opponent_points(players) == [[-3], [-10]]
+
+
+def test_get_card_placement_order():
+    d = Dealer([MockPlayer(), MockPlayer()])
+    cards = [Card(10, 1), Card(2, 1), Card(6, 1), Card(5, 1)]
+
+    assert d.get_card_placement_order(cards) == [1, 3, 2, 0]
 
 
 def test_simulate_game():

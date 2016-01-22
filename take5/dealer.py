@@ -1,3 +1,5 @@
+import random
+
 from player import Card
 
 
@@ -57,6 +59,7 @@ class Dealer:
         """plays a single round"""
 
         self._deck = self._initial_deck[:]
+        random.shuffle(self._deck)
 
         for player in self.players:
             player.set_hand(self.deal_hand())
@@ -169,10 +172,11 @@ class Dealer:
         closest_smaller_card_delta = float('inf')
 
         for i, top_card in enumerate(first_of_stacks):
-            card_delta = card.face - top_card.face
-
-            closest_smaller_card_stack = i
-            closest_smaller_card_delta = card_delta
+            if card.face > top_card.face:
+                card_delta = card.face - top_card.face
+                if card_delta < closest_smaller_card_delta:
+                    closest_smaller_card_stack = i
+                    closest_smaller_card_delta = card_delta
 
         return closest_smaller_card_stack
 
