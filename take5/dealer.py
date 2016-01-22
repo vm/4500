@@ -1,5 +1,3 @@
-import operator
-
 from player import Card
 
 
@@ -22,16 +20,16 @@ class Dealer:
             raise ValueError('number of players must be in interval [2, 10]')
 
         if initial_deck is None:
-            self._initial_deck = [Card(i, (i%6) + 2) for i in range(1, 105)]
+            self._initial_deck = [Card(i, (i % 6) + 2) for i in range(1, 105)]
         else:
             if len(initial_deck) != expected_deck_len:
                 raise ValueError('Incorrect deck size')
 
             faces = set(card.face for card in initial_deck)
-            if not len(faces) == len(initial_deck):
+            if len(faces) != len(initial_deck):
                 ValueError('Contains two cards with the same face value')
 
-            if not faces == set(range(1, 105)):
+            if faces != set(range(1, 105)):
                 raise ValueError('Must have only one of every face value')
 
             if any(card.bull < 2 or card.bull > 7 for card in initial_deck):
@@ -66,7 +64,6 @@ class Dealer:
         self._stacks = self.create_stacks()
 
         while self.players_have_cards():
-#            import pdb; pdb.set_trace()
             self.play_turn()
 
     def players_have_cards(self):
@@ -137,7 +134,8 @@ class Dealer:
         :rtype: list of list of Card
         """
 
-        closest_smaller_card_stack = self.get_closest_smaller_card(card, stacks)
+        closest_smaller_card_stack = self.get_closest_smaller_card(
+            card, stacks)
 
         if closest_smaller_card_stack is None:
             chosen_stack_index = player.pick_stack(
@@ -282,11 +280,11 @@ class Dealer:
         if not self.is_game_over():
             raise Exception('game must be over to use this method')
 
-        winning_player_name  = None
+        winning_player_name = None
         winning_player_points = float('inf')
 
-        for i,p in enumerate(self.players):
-            player_points = p.get_points()
+        for i, player in enumerate(self.players):
+            player_points = player.get_points()
 
             if player_points < winning_player_points:
                 winning_player_name = i
