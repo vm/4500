@@ -1,0 +1,146 @@
+commit 5c7be7879bf9b5fcd621247b3fab1158844016c2
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Fri Jan 22 17:40:44 2016 -0500
+
+    Add README.txt
+
+commit 4f8196857fbb6a27c4dc2ce762ac2ca71c484f12
+Merge: bd238f3 9200105
+Author: vignesh <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 17:37:19 2016 -0500
+
+    Merge pull request #3 from cs4500sp16/2
+    
+    Add README.txt
+
+commit 92001057a51e424dd380166ac983e9a4b9b3c6dc
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Fri Jan 22 17:36:19 2016 -0500
+
+    Add README.txt
+
+commit bd238f3561edae407d0abb6ec704082b8efd3690
+Merge: 338b3ac d5efc80
+Author: vignesh <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 17:27:23 2016 -0500
+
+    Merge pull request #2 from cs4500sp16/2
+    
+    2
+
+commit d5efc800ec875a6712652f95b3c13ff226dc992f
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Fri Jan 22 17:26:00 2016 -0500
+
+    Update dealer and tests
+
+commit 338b3ac299eb9acb31d1a18f3465e20a6c6a85e7
+Merge: 00ab18a 743e69e
+Author: lvs <lvs@ccs.neu.edu>
+Date:   Fri Jan 22 16:57:16 2016 -0500
+
+    Merge pull request #1 from cs4500sp16/player-implementation
+    
+    Player implementation
+
+commit 743e69e796d8791568afc869debb1c588d2b5073
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 16:04:31 2016 -0500
+
+    Changed wording
+
+commit 638369c707c0ed0cd5395a33df169ac111a929f6
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 15:57:40 2016 -0500
+
+    Added missing specs
+
+commit 17f12e55b240cca7c63a95062d47c20ce5e20a79
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 15:16:30 2016 -0500
+
+    Initial player implementation
+
+commit 299593477a8868ab9ef566109bcb3642fa07d5f7
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 14:49:29 2016 -0500
+
+    Add change to mutate self._stacks
+
+commit ec13078ba92ea87b629e3ab247c9966f128ed6f3
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 14:24:59 2016 -0500
+
+    Add tests for existing staticmethods
+
+commit af8d7a6c99fc1e3def3ba991cb546333464f1b62
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Fri Jan 22 13:52:17 2016 -0500
+
+    Fix some style
+
+commit 83e6cf90fbf809eded0e1f11eca6bbaca6644439
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Fri Jan 22 13:35:35 2016 -0500
+
+    Update dealer implementation. Add player interface
+
+commit 894e5b2ecac6968943d8d3bd383da1062638cdfb
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Thu Jan 21 18:35:59 2016 -0500
+
+    Check for duplicate cards
+
+commit feafbda3aea75060a9deb4a4933231295062b0d4
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Thu Jan 21 18:13:45 2016 -0500
+
+    Implement deal_hand
+
+commit 7630c3e20ddd412d9753b903f9b91bfa85970bd5
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Thu Jan 21 17:42:08 2016 -0500
+
+    implement 6Nimmt Dealer
+
+commit 00ab18a1862cf37adb553bfe7ad5929815527d2d
+Author: vyadav <vyadav@ccs.neu.edu>
+Date:   Wed Jan 20 17:56:58 2016 -0500
+
+    Create for-2.txt
+
+commit 9c263058a4f106e73fc50138b2b73f82adf6afdb
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Mon Jan 18 20:43:55 2016 -0500
+
+    Update README with player-interface.txt description
+
+commit 229ea017b892278a45cf27caf5801c6dfe9391b8
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Sun Jan 17 15:57:45 2016 -0500
+
+    Add params to pick_card and pick_stack for opponent points and discarded cards
+
+commit e3c6f7ca5212e77f7fca19bb2a422730a2d5071b
+Author: Luke Van Seters <lvs@ccs.neu.edu>
+Date:   Sun Jan 17 15:36:37 2016 -0500
+
+    Add player interface
+
+commit 60d2d06e2f53640b6ff609ec7a324ebe8e00c031
+Author: Vignesh Mohankumar <vignesh@ccs.neu.edu>
+Date:   Sat Jan 16 14:47:14 2016 -0500
+
+    Add section on deploy to memo
+
+commit 5d4a25cc8732108688b4d7705429f43a3785a5fc
+Author: Vignesh Mohankumar <vignesh@vigneshmohankumar.com>
+Date:   Sat Jan 16 14:30:03 2016 -0500
+
+    Add a memo detailing Python as our language choice
+
+commit 3bf3eefe91027c6b15753de6022428d148037ecc
+Author: Luke Van Seters <lukevanseters@gmail.com>
+Date:   Sat Jan 16 14:23:27 2016 -0500
+
+    Initial commit. Add a README.txt
