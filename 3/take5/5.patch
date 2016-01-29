@@ -1,0 +1,24 @@
+diff --git a/2/take5/increasing_player.py b/2/take5/increasing_player.py
+new file mode 100644
+index 0000000..e789b24
+--- /dev/null
++++ b/2/take5/increasing_player.py
+@@ -0,0 +1,18 @@
++import os
++import sys
++
++PATH_TO_PLAYER = '../../3/'
++sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
++
++from player import BasePlayer
++
++class IncreasingPlayer(BasePlayer):
++    def pick_card(self, stacks, opponent_points):
++        card_to_remove_index = min(
++            range(len(self._hand)),
++            key=lambda i: self_hand[i].face)
++
++        return self._hand.pop(card_to_remove_index)
++
++    def pick_stack(self, stacks, opponent_points, remaining_cards):
++        return 0

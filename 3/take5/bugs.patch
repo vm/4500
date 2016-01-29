@@ -1,0 +1,13 @@
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index d044246..085b6b1 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -37,7 +37,7 @@ class Dealer:
+ 
+             faces = set(card.face for card in initial_deck)
+             if len(faces) != len(initial_deck):
+-                ValueError('Contains two cards with the same face value')
++                raise ValueError('Contains two cards with the same face value')
+ 
+             if faces != set(range(1, 105)):
+                 raise ValueError('Must have only one of every face value')

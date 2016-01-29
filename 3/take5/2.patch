@@ -1,0 +1,96 @@
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index 085b6b1..5836a18 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -22,15 +22,23 @@ class Dealer:
+         :type card_handout_order: list of int or None
+         """
+ 
+-        expected_deck_len = 104
++        start_face = 1
++        expected_deck_len = 209
++        expected_faces = range(start_face, start_face + expected_deck_len)
+ 
+-        if len(players) < 2 or len(players) > 10:
+-            raise ValueError('number of players must be in interval [2, 10]')
++        self._cards_in_hand = 10
++        self._num_stacks = 4
++
++        max_players = (expected_deck_len - self._num_stacks) // self._cards_in_hand
++
++        if len(players) < 2 or len(players) > max_players:
++            raise ValueError('number of players must be in interval [2, {}]'
++                             .format(max_players))
+ 
+         self.players = players
+ 
+         if initial_deck is None:
+-            self._initial_deck = [Card(i, (i % 6) + 2) for i in range(1, 105)]
++            self._initial_deck = [Card(i, (i%6) + 2) for i in expected_faces]
+         else:
+             if len(initial_deck) != expected_deck_len:
+                 raise ValueError('Incorrect deck size')
+@@ -39,7 +47,7 @@ class Dealer:
+             if len(faces) != len(initial_deck):
+                 raise ValueError('Contains two cards with the same face value')
+ 
+-            if faces != set(range(1, 105)):
++            if faces != set(expected_faces):
+                 raise ValueError('Must have only one of every face value')
+ 
+             if any(card.bull < 2 or card.bull > 7 for card in initial_deck):
+@@ -239,13 +247,8 @@ class Dealer:
+         :rtype: list of Card
+         """
+ 
+-        cards_in_hand = 10
+-
+-        if self._deck is None or len(self._deck) < cards_in_hand:
+-            raise ValueError('invalid deck')
+-
+-        hand = self._deck[:cards_in_hand]
+-        self._deck = self._deck[cards_in_hand:]
++        hand = self._deck[:self._cards_in_hand]
++        self._deck = self._deck[self._cards_in_hand:]
+ 
+         return hand
+ 
+@@ -256,10 +259,8 @@ class Dealer:
+         :rtype: list of list of Card
+         """
+ 
+-        num_stacks = 4
+-
+-        stack_cards = self._deck[:num_stacks]
+-        self._deck = self._deck[num_stacks:]
++        stack_cards = self._deck[:self._num_stacks]
++        self._deck = self._deck[self._num_stacks:]
+ 
+         return [[c] for c in stack_cards]
+ 
+diff --git a/2/take5/test_dealer.py b/2/take5/test_dealer.py
+index 551d910..9d3ac40 100644
+--- a/2/take5/test_dealer.py
++++ b/2/take5/test_dealer.py
+@@ -26,7 +26,7 @@ def test_dealer_creation():
+         Dealer(low_players)
+ 
+     with pytest.raises(ValueError):
+-        high_players = [MockPlayer() for _ in range(11)]
++        high_players = [MockPlayer() for _ in range(30)]
+         Dealer(high_players)
+ 
+     low_valid_players = [MockPlayer() for _ in range(2)]
+@@ -35,7 +35,11 @@ def test_dealer_creation():
+     high_valid_players = [MockPlayer() for _ in range(10)]
+     Dealer(high_valid_players)
+ 
+-    valid_deck = [Card(i, (i%6) + 2) for i in range(1, 105)]
++    start_face = 1
++    expected_deck_len = 209
++    expected_faces = range(start_face, start_face + expected_deck_len)
++
++    valid_deck = [Card(i, (i%6) + 2) for i in expected_faces]
+     Dealer(high_valid_players, valid_deck)
+ 
+     with pytest.raises(ValueError):

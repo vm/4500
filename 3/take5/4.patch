@@ -1,0 +1,57 @@
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index 085b6b1..0224c21 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -23,6 +23,9 @@ class Dealer:
+         """
+ 
+         expected_deck_len = 104
++        min_bull = 3
++        max_bull = 7
++        bull_diff = max_bull - min_bull
+ 
+         if len(players) < 2 or len(players) > 10:
+             raise ValueError('number of players must be in interval [2, 10]')
+@@ -30,14 +33,17 @@ class Dealer:
+         self.players = players
+ 
+         if initial_deck is None:
+-            self._initial_deck = [Card(i, (i % 6) + 2) for i in range(1, 105)]
++            self._initial_deck = [
++                Card(i, (i % (bull_diff+1)) + min_bull)
++                for i in range(1, 105)
++            ]
+         else:
+             if len(initial_deck) != expected_deck_len:
+                 raise ValueError('Incorrect deck size')
+ 
+             faces = set(card.face for card in initial_deck)
+             if len(faces) != len(initial_deck):
+-                raise ValueError('Contains two cards with the same face value')
++                ValueError('Contains two cards with the same face value')
+ 
+             if faces != set(range(1, 105)):
+                 raise ValueError('Must have only one of every face value')
+diff --git a/2/take5/test_dealer.py b/2/take5/test_dealer.py
+index 551d910..efdefbb 100644
+--- a/2/take5/test_dealer.py
++++ b/2/take5/test_dealer.py
+@@ -35,15 +35,15 @@ def test_dealer_creation():
+     high_valid_players = [MockPlayer() for _ in range(10)]
+     Dealer(high_valid_players)
+ 
+-    valid_deck = [Card(i, (i%6) + 2) for i in range(1, 105)]
++    valid_deck = [Card(i, (i%5) + 3) for i in range(1, 105)]
+     Dealer(high_valid_players, valid_deck)
+ 
+     with pytest.raises(ValueError):
+-        short_deck = [Card(i, 2) for i in range(1, 100)]
++        short_deck = [Card(i, 3) for i in range(1, 100)]
+         Dealer(high_valid_players, short_deck)
+ 
+     with pytest.raises(ValueError):
+-        wrong_face_values_deck = [Card(i, 2) for i in range(0, 104)]
++        wrong_face_values_deck = [Card(i, 3) for i in range(0, 104)]
+         Dealer(high_valid_players, wrong_face_values_deck)
+ 
+     with pytest.raises(ValueError):
