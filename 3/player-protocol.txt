@@ -1,0 +1,409 @@
+Player protocol for 6Nimmt!
+
+ ------------
+| DATA TYPES |
+ ------------
+
+Card
+----
+
+Params:
+
+id (int) - unique identifier
+face (int) - face value for a card
+bull (int) - bull value for a card
+
+Example JSON:
+{
+  "id": 1,
+  "face": 26,
+  "bull": 3
+}
+
+Stack
+-----
+
+Params:
+
+id (int) - unique identifier
+cards (list of Card) - cards in the stack ordered top to bottom
+
+Example JSON:
+{
+  "id": 1,
+  "cards": [
+    {
+      "id": 1,
+      "face": 26,
+      "bull": 3
+    },
+    {
+      "id": 2,
+      "face": 27,
+      "bull": 4
+    }
+  ]
+}
+
+Request
+-------
+
+Params:
+
+request (string): type of the request
+data (hash string -> JSON): parameters of the request (omitted if no parameters)
+
+Example JSON:
+
+{
+  "request": "some_request_with_params",
+  "data": {
+    "param1": "value1",
+    "param2": 2
+  }
+}
+
+{
+  "request": "some_request_without_params"
+}
+
+Response
+--------
+
+Params:
+ok (boolean): whether the request was successful
+data (hash string -> JSON): response data (omitted if ok is false)
+error (string): error message for a failed request (omitted if ok is true)
+
+Example JSON:
+
+{
+  "ok": true,
+  "data": {
+    "param1": "value1",
+    "param2": 2
+  }
+}
+
+{
+  "ok": false,
+  "error": "Unknown request"
+}
+
+ ----------
+| REQUESTS |
+ ----------
+
+join_game
+---------
+
+Description:
+- request to join a game
+- client must provide his/her player name to be used in the game
+- this request will return an error if
+    - request is malformed
+    - name is already in use
+    - game has already started
+
+Request:
+name (string): unique identifier for the player
+
+Response:
+name (string): unique identifier for the player
+hand (list of Card): the player's hand of cards
+
+Example Request:
+{
+  "request": "join_game",
+  "data": {
+    "name": "Bob"
+  }
+}
+
+Example Response:
+{
+  "ok": true,
+  "data": {
+    "name": "Bob"
+    "hand": [
+      {
+        "id": 1,
+        "face": 26,
+        "bull": 3
+      },
+      {
+        "id": 2,
+        "face": 27,
+        "bull": 4
+      }
+    ]
+  }
+}
+
+ask_card
+--------
+
+Description:
+- request asking to pick a card
+- if client takes longer than 30 seconds to call pick_card, request is resent
+
+Request Data:
+hand (list of Card): hand of the player
+points (hash string -> int): mapping from player name to number of points for all players
+stacks (list of Stack): current state of the game stacks
+
+Example Request:
+{
+  "request": "ask_card",
+  "data": {
+    "hand": [
+      {
+        "id": 1,
+        "face": 26,
+        "bull": 3
+      },
+      {
+        "id": 2,
+        "face": 27,
+        "bull": 4
+      }
+    ],
+    "points": {
+      "Bob": 5,
+      "John": 7
+    },
+    "stacks": [
+      [
+        {
+          "id": 4,
+          "face": 31,
+          "bull": 3
+        },
+        {
+          "id": 5,
+          "face": 32,
+          "bull": 4
+        }
+      ],
+      [
+        {
+          "id": 8,
+          "face": 35,
+          "bull": 3
+        },
+        {
+          "id": 9,
+          "face": 36,
+          "bull": 4
+        }
+      ]
+    ]
+  }
+}
+
+
+pick_card
+---------
+
+Description:
+- request to pick a card
+- game will respond with an error if
+    - request is malformed
+    - request does not with a card id from their hand
+
+Request Data:
+id (int): id of the card to pick
+
+Example Request:
+{
+  "request": "pick_card",
+  "data": {
+    "id": 1
+  }
+}
+
+Response Data:
+None
+
+Example Responses:
+{
+  "ok": true
+}
+
+{
+  "ok": false,
+  "error": "Invalid card id"
+}
+
+ask_stack
+---------
+
+Description:
+- request asking to pick a stack
+- if client takes longer than 30 seconds to call pick_stack, request is resent
+
+Request Data:
+hand (list of Card): hand of the player
+points (hash string -> int): mapping from player name to number of points for all players
+stacks (list of Stack): current state of the game stacks
+
+Example Request:
+{
+  "request": "ask_stack",
+  "data": {
+    "hand": [
+      {
+        "id": 1,
+        "face": 26,
+        "bull": 3
+      },
+      {
+        "id": 2,
+        "face": 27,
+        "bull": 4
+      }
+    ],
+    "points": {
+      "Bob": 5,
+      "John": 7
+    },
+    "stacks": [
+      [
+        {
+          "id": 4,
+          "face": 31,
+          "bull": 3
+        },
+        {
+          "id": 5,
+          "face": 32,
+          "bull": 4
+        }
+      ],
+      [
+        {
+          "id": 8,
+          "face": 35,
+          "bull": 3
+        },
+        {
+          "id": 9,
+          "face": 36,
+          "bull": 4
+        }
+      ]
+    ]
+  }
+}
+
+pick_stack
+----------
+
+Description:
+- request to pick a stack
+- will respond with an error if
+    - request is malformed
+    - client does not respond with a stack id from the stacks
+
+Request Data:
+id (int): id of the stack to pick
+
+Example Request:
+{
+  "request": "pick_stack",
+  "data": {
+    "id": 1
+  }
+}
+
+Response Data:
+None
+
+Example Responses:
+{
+  "ok": true
+}
+
+{
+  "ok": false,
+  "error": "Invalid card id"
+}
+
+game_over
+---------
+
+Description:
+- informs the client that the game is over
+
+Request Data:
+winner (string): name of the winning player
+points (hash string -> int): mapping from player name to number of points for all players
+
+Example Request:
+{
+  "request": "pick_stack",
+  "data": {
+    "winner": "Bob",
+    "points": {
+      "Bob": 20,
+      "John": 7
+    }
+  }
+}
+
+
+ ---------------------
+| INTERACTION DIAGRAM |
+ ---------------------
+
+  +--------+
+  | server |
+  +--------+
+      |
+      |   waiting for clients* (see below)
+      |
+     ...                              +--------+
+      |                               | client |
+      |                               +---+----+
+      |   join_game                       |
+      | <---------------------------------+
+      |                                   |
+      +-------------------------------->  |
+      +-------------------------------->  |
+      |                                   |
+      |                                   |
+     ...                                  |
+      |                                   |
+      |   ask_card                        |
+      +-------------------------------->  |
+      |                                   |
+      |   pick_card                       |
+      | <---------------------------------+
+      |                                   |
+      +-------------------------------->  |
+      +-------------------------------->  |
+      |                                   |
+      |                                   |
+      |   ask_stack                       |
+      +-------------------------------->  |
+      |                                   |
+      |   pick_stack                      |
+      | <---------------------------------+
+      |                                   |
+      +-------------------------------->  |
+      +-------------------------------->  |
+      |                                   |
+     ...                                  |
+      |                                   |
+      |   game_over                       |
+      +-------------------------------->  |
+      |                                   |
+      +                                   +
+
+
+*waiting for clients
+- waits for the minimum required number of clients to join
+- waits an additional 30 seconds for other clients to join
+    - if another client joins in those 30 seconds, the timeout is reset
+    - otherwise game begins
+- if the maximum number of clients is reached, the server ignores future join requests

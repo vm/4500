@@ -1,13 +1,14 @@
-The purpose of this project was to update the player implementation to reflect specification changes.
+The purpose of this project was to update the game implementation and to add a player-protocol specification.
 
-player.py: implementation of player according to the specification
-mandatory.patch: patch for game implementation in /2 to reference player in /3
-bugs.patch: patch to fix a bug
-1.patch: patch to force players to pick up a stack if it is six cards deep instead of five
-2.patch: patch to use 210 cards with face value between 1 and 210
-3.patch: patch to deal players 9 cards instead of 10
-4.patch: patch to increase minimum bull points from 2 to 3
-5.patch: patch to implement player who places cards in increasing order of face value
+player-protocol.txt: communication protocol to interact with external players
+take5/player.py: implementation of player according to the specification
+take5/mandatory.patch: patch for game implementation in /2 to reference player in /3
+take5/bugs.patch: patch to fix a bug
+take5/1.patch: patch to force players to pick up a stack if it is six cards deep instead of five
+take5/2.patch: patch to use 210 cards with face value between 1 and 210
+take5/3.patch: patch to deal players 9 cards instead of 10
+take5/4.patch: patch to increase minimum bull points from 2 to 3
+take5/5.patch: patch to implement player who places cards in increasing order of face value
 
 justifications for multi-line patches:
 
