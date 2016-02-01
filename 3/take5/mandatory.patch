@@ -1,3 +1,19 @@
+diff --git a/2/take5/dealer.py b/2/take5/dealer.py
+index d044246..d4bf04b 100644
+--- a/2/take5/dealer.py
++++ b/2/take5/dealer.py
+@@ -1,5 +1,11 @@
+ import random
+
++import os
++import sys
++
++PATH_TO_PLAYER = '../../3/'
++sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
++
+ from player import Card
+
+
 diff --git a/2/take5/main.py b/2/take5/main.py
 index ff367b4..87efd7e 100644
 --- a/2/take5/main.py
