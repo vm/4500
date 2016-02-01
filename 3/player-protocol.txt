@@ -1,4 +1,4 @@
-Player protocol for 6Nimmt!
+Player protocol for Take 5
 
  ------------
 | DATA TYPES |
@@ -7,8 +7,7 @@ Player protocol for 6Nimmt!
 Card
 ----
 
-Params:
-
+Fields:
 id (int) - unique identifier
 face (int) - face value for a card
 bull (int) - bull value for a card
@@ -23,8 +22,7 @@ Example JSON:
 Stack
 -----
 
-Params:
-
+Fields:
 id (int) - unique identifier
 cards (list of Card) - cards in the stack ordered top to bottom
 
@@ -48,18 +46,16 @@ Example JSON:
 Request
 -------
 
-Params:
-
+Fields:
 request (string): type of the request
 data (hash string -> JSON): parameters of the request (omitted if no parameters)
 
 Example JSON:
-
 {
   "request": "some_request_with_params",
   "data": {
-    "param1": "value1",
-    "param2": 2
+    "field1": "value1",
+    "field2": 2
   }
 }
 
@@ -70,18 +66,17 @@ Example JSON:
 Response
 --------
 
-Params:
+Fields:
 ok (boolean): whether the request was successful
 data (hash string -> JSON): response data (omitted if ok is false)
 error (string): error message for a failed request (omitted if ok is true)
 
 Example JSON:
-
 {
   "ok": true,
   "data": {
-    "param1": "value1",
-    "param2": 2
+    "field1": "value1",
+    "field2": 2
   }
 }
 
@@ -89,6 +84,7 @@ Example JSON:
   "ok": false,
   "error": "Unknown request"
 }
+
 
  ----------
 | REQUESTS |
@@ -105,14 +101,10 @@ Description:
     - name is already in use
     - game has already started
 
-Request:
+Request Data:
 name (string): unique identifier for the player
 
-Response:
-name (string): unique identifier for the player
-hand (list of Card): the player's hand of cards
-
-Example Request:
+Request Example:
 {
   "request": "join_game",
   "data": {
@@ -120,23 +112,14 @@ Example Request:
   }
 }
 
-Example Response:
+Response Data:
+name (string): unique identifier for the player
+
+Response Example:
 {
   "ok": true,
   "data": {
     "name": "Bob"
-    "hand": [
-      {
-        "id": 1,
-        "face": 26,
-        "bull": 3
-      },
-      {
-        "id": 2,
-        "face": 27,
-        "bull": 4
-      }
-    ]
   }
 }
 
@@ -152,7 +135,7 @@ hand (list of Card): hand of the player
 points (hash string -> int): mapping from player name to number of points for all players
 stacks (list of Stack): current state of the game stacks
 
-Example Request:
+Request Example:
 {
   "request": "ask_card",
   "data": {
@@ -201,7 +184,6 @@ Example Request:
   }
 }
 
-
 pick_card
 ---------
 
@@ -214,7 +196,7 @@ Description:
 Request Data:
 id (int): id of the card to pick
 
-Example Request:
+Request Example:
 {
   "request": "pick_card",
   "data": {
@@ -225,7 +207,7 @@ Example Request:
 Response Data:
 None
 
-Example Responses:
+Responses Example:
 {
   "ok": true
 }
@@ -247,7 +229,7 @@ hand (list of Card): hand of the player
 points (hash string -> int): mapping from player name to number of points for all players
 stacks (list of Stack): current state of the game stacks
 
-Example Request:
+Request Example:
 {
   "request": "ask_stack",
   "data": {
@@ -308,7 +290,7 @@ Description:
 Request Data:
 id (int): id of the stack to pick
 
-Example Request:
+Request Example:
 {
   "request": "pick_stack",
   "data": {
@@ -319,7 +301,7 @@ Example Request:
 Response Data:
 None
 
-Example Responses:
+Response Example:
 {
   "ok": true
 }
@@ -339,7 +321,7 @@ Request Data:
 winner (string): name of the winning player
 points (hash string -> int): mapping from player name to number of points for all players
 
-Example Request:
+Request Example:
 {
   "request": "pick_stack",
   "data": {
