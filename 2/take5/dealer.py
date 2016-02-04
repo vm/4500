@@ -1,5 +1,11 @@
 import random
 
+import os
+import sys
+
+PATH_TO_PLAYER = '../../3/'
+sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
+
 from player import Card
 
 
@@ -37,7 +43,7 @@ class Dealer:
 
             faces = set(card.face for card in initial_deck)
             if len(faces) != len(initial_deck):
-                ValueError('Contains two cards with the same face value')
+                raise ValueError('Contains two cards with the same face value')
 
             if faces != set(range(1, 105)):
                 raise ValueError('Must have only one of every face value')
