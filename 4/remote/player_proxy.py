@@ -155,13 +155,86 @@ def get_reply(player, msg):
     :rtype: JSON
     """
 
-    # check if the msg matches one of the spec requests
-    # call the appropriate method
-    # else ?? TODO
+    request_type_to_fn = {
+        'start-round': start_round,
+        'take-turn': take_turn,
+        'choose': choose
+    }
 
-    raise ValueError("Invalid message")
+    if not isinstance(msg, list) or len(msg) < 2:
+        raise ValueError('Incorrect message format')
+
+    request_type = msg[0]
+    params = msg[1:]
+
+    if not request_type in request_map:
+        raise ValueError('Incorrect message format')
+
+    request_fn = request_type_to_fn[request_type]
+    return request_fn(player, *params)
 
 
+def is_json_card(maybe_json_card):
+    """check if the input is a valid JSON card
+
+    :param maybe_json_card: input to check
+    :type maybe_json_card: JSON
+
+    :returns: whether input is a JSONCard
+    :rtype: bool
+    """
+
+    return (isinstance(maybe_json_card, list) and
+            len(maybe_json_card) == 2 and
+            all(isinstance(i, int) and i > 0 for i in maybe_json_card))
+
+
+def is_lcard(maybe_lcard):
+    """checks if the input is a valid LCard
+
+    :param maybe_lcard: input to check
+    :type maybe_lcard: JSON
+
+    :returns: whether input is an LCard
+    :rtype: bool
+    """
+
+    return isinstance(maybe_lcard, list) and all(map(is_json_card, maybe_lcard))
+
+
+def is_deck(maybe_deck):
+    """checks if the input is a valid deck
+
+    :param maybe_deck: input to check
+    :type maybe_deck: JSON
+
+    :returns: whether input is an Deck
+    :rtype: bool
+    """
+
+    return isinstance(maybe_deck, list) and all(map(is_lcard, maybe_deck))
+
+
+def validate_request(validators):
+    """validates function input with validators
+
+    :param validators: list of validator functions in argument order
+    :type validators: list of fn: JSON -> bool
+
+    :returns: function with input validation
+    :rtype: func
+    """
+
+    def wrap(fn):
+        def request(player, *args):
+            if not all(validator(arg) for validator, arg in zip(validators, args)):
+                raise ValueError('Invalid argument type')
+            return fn(player, *args)
+        return request
+    return wrap
+
+
+@validate_request([is_lcard])
 def start_round(player, hand):
     """starts a round
 
@@ -175,9 +248,10 @@ def start_round(player, hand):
     :rtype: bool
     """
 
-    player.set_hand([_json_card_to_internal(json_card) for json_card in hand])
+    player.set_hand([json_card_to_internal(json_card) for json_card in hand])
 
 
+@validate_request([is_deck])
 def take_turn(player, deck):
     """takes a turn
 
@@ -191,12 +265,12 @@ def take_turn(player, deck):
     :rtype: Card
     """
 
-    internal_deck = [_lcard_to_internal(stack) for stack in deck]
+    internal_deck = [lcard_to_internal(stack) for stack in deck]
     card = player.pick_card(internal_deck, None)
 
-    return _json_card_from_internal(card)
+    return json_card_from_internal(card)
 
-
+@validate_request([is_deck])
 def choose(player, deck):
     """chooses a stack
 
@@ -210,7 +284,7 @@ def choose(player, deck):
     :rtype: Stack
     """
 
-    internal_deck = [_lcard_to_internal(stack) for stack in deck]
+    internal_deck = [lcard_to_internal(stack) for stack in deck]
     stack_index = player.pick_stack(internal_deck, None, None)
 
     return deck[stack_index]
@@ -229,7 +303,7 @@ def send(sock, reply):
     raise NotImplementedError()
 
 
-def _json_card_to_internal(json_card):
+def json_card_to_internal(json_card):
     """convert a JSONCard to a Card
 
     :param json_card: json card to convert
@@ -243,7 +317,7 @@ def _json_card_to_internal(json_card):
     return Card(face, bull)
 
 
-def _lcard_to_internal(lcard):
+def lcard_to_internal(lcard):
     """convert an LCard to a list of Card
 
     :param lcard: json cards to convert
@@ -253,10 +327,10 @@ def _lcard_to_internal(lcard):
     :rtype: list of Card
     """
 
-    return [_json_card_to_internal(json_card) for json_card in lcard]
+    return [json_card_to_internal(json_card) for json_card in lcard]
 
 
-def _json_card_from_interal(card):
+def json_card_from_internal(card):
     """convert a Card to a JSONCard
 
     :param card: card to convert

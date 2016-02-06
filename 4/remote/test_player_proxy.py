@@ -77,7 +77,7 @@ def test_read():
         message_queue.put(json.dumps(ex))
         assert proxy.read(read_sock) == ex
 
-    hand = [[0, 0], [1, 1], [2, 2]]
+    hand = [[10, 10], [1, 1], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
@@ -126,7 +126,7 @@ def test_is_valid_json():
     assert not proxy.is_valid_json('[')
     assert not proxy.is_valid_json('{')
 
-    stack = [[0, 0], [1, 1], [2, 2]]
+    stack = [[10, 10], [1, 1], [2, 2]]
     assert proxy.is_valid_json('["start-round", {}]'.format(stack))
 
     deck = [stack, stack, stack, stack]
@@ -146,7 +146,7 @@ def test_get_reply_valid():
 
     player = TestPlayer()
 
-    hand = [[0, 0], [1, 1], [2, 2]]
+    hand = [[10, 10], [1, 1], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
@@ -180,7 +180,7 @@ def test_get_reply_invalid():
 
     player = TestPlayer()
 
-    hand = [[0, 0], [1, 1], [2, 2]]
+    hand = [[10, 10], [1, 1], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
@@ -216,7 +216,7 @@ def test_start_round():
     """
 
     player = TestPlayer()
-    hand = [[0, 0], [1, 1], [2, 2], [3, 3]]
+    hand = [[10, 10], [1, 1], [2, 2], [3, 3]]
     proxy.start_round(player, hand)
 
     assert player._hand == [Card(*json_card) for json_card in hand]
@@ -230,13 +230,13 @@ def test_take_turn():
     """
 
     player = TestPlayer()
-    card = [0, 0]
-    hand = [card, [1, 1], [2, 2], [3, 3]]
+    card = Card(10, 10)
+    hand = [card, Card(1, 1), Card(2, 2), Card(3, 3)]
 
     deck = [[[4, 4], [5, 5]]]
 
     player._hand = hand
-    assert proxy.take_turn(player, deck) == card
+    assert proxy.take_turn(player, deck) == [card.face, card.bull]
 
 
 def test_choose():
@@ -248,10 +248,10 @@ def test_choose():
 
     player = TestPlayer()
     deck = [
-        [[0, 0], [1, 1], [2, 2], [3, 3]],
-        [[1, 0], [1, 1], [2, 2], [3, 3]],
-        [[2, 0], [1, 1], [2, 2], [3, 3]],
-        [[3, 0], [1, 1], [2, 2], [3, 3]]
+        [[10, 10], [1, 1], [2, 2], [3, 3]],
+        [[1, 10], [1, 1], [2, 2], [3, 3]],
+        [[2, 10], [1, 1], [2, 2], [3, 3]],
+        [[3, 10], [1, 1], [2, 2], [3, 3]],
     ]
 
     assert proxy.choose(player, deck) == deck[CHOSEN_INDEX]
@@ -286,3 +286,32 @@ def test_send():
     for ex in examples:
         proxy.send(write_sock, ex)
         assert read_sock.recv(bufsize=len(ex)) == str(ex)
+
+
+def test_validate_request():
+    """tests the validate request decorator
+
+    cases:
+        - doesn't raise on good input
+        - raises on bad input
+        - doesn't affect the output of the function on valid input
+    """
+
+    good_deck = [
+        [[4, 4], [5, 5]],
+        [[6, 6], [7, 7]]
+    ]
+
+    bad_deck = [
+        [[4, 4], [5, 5]],
+        [None]
+    ]
+
+    player = TestPlayer()
+    inner_fn = lambda player, deck: (player, deck)
+    dummy_fn = proxy.validate_request([proxy.is_deck])(inner_fn)
+
+    assert dummy_fn(player, good_deck) == inner_fn(player, good_deck)
+
+    with pytest.raises(ValueError):
+        dummy_fn(player, bad_deck)
