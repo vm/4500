@@ -10,16 +10,16 @@ sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
 import pytest
 
 import player_proxy as proxy
-from player import BasePlayer
+from player import BasePlayer, Card
 
 CHOSEN_INDEX = 0
 
 
 class TestPlayer(BasePlayer):
-    def pick_card(self, *args):
+    def pick_card(self, stacks, opponent_points):
         return self._hand[CHOSEN_INDEX]
 
-    def pick_stack(self, k):
+    def pick_stack(self, stacks, opponent_points, remaining_cards):
         return CHOSEN_INDEX
 
 
@@ -118,9 +118,10 @@ def test_is_valid_json():
     assert proxy.is_valid_json('[]')
     assert proxy.is_valid_json('{}')
     assert proxy.is_valid_json('true')
-    assert proxy.is_valid_json('"\"\""')
-    assert proxy.is_valid_json('{ok: [{}, {}]}')
-    assert proxy.is_valid_json('"'"'"'""'"'"'"')
+    assert proxy.is_valid_json('"'"'""'"'"')
+    assert proxy.is_valid_json('"u\1111"')
+    assert proxy.is_valid_json('"\\\/"')
+    assert proxy.is_valid_json('{"ok": [{}, {}, "", ["[", "["]]}')
 
     assert not proxy.is_valid_json('[')
     assert not proxy.is_valid_json('{')
@@ -218,7 +219,7 @@ def test_start_round():
     hand = [[0, 0], [1, 1], [2, 2], [3, 3]]
     proxy.start_round(player, hand)
 
-    assert player._hand == hand
+    assert player._hand == [Card(*json_card) for json_card in hand]
 
 
 def test_take_turn():
@@ -271,7 +272,7 @@ def test_send():
 
     empty_hash = {}
     empty_list = []
-    empty_string  = ""
+    empty_string = ""
     single_number = 1
     single_bool = True
 
