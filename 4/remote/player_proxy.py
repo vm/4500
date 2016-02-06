@@ -139,13 +139,13 @@ def start_round(player, hand):
 def take_turn(player, deck):
     """takes a turn
 
-    :param player: player to player the game
+    :param player: player to play the game
     :type player: Player
 
     :param deck: deck of stacks for each turn
     :type deck: Deck
 
-    :returns: card the player wishes to player
+    :returns: card the player wishes to play
     :rtype: Card
     """
 
@@ -155,7 +155,7 @@ def take_turn(player, deck):
 def choose(player, deck):
     """chooses a stack
 
-    :param player: player to player the game
+    :param player: player to play the game
     :type player: Player
 
     :param deck: deck of stacks
