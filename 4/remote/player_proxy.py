@@ -56,8 +56,16 @@ def run(server, port):
     try:
         while True:
             msg = read(sock)
-            ret = get_reply(player, msg)
+
+            try:
+                ret = get_reply(player, msg)
+            except ValueError:
+                break
+
             send(sock, ret)
+
+            if ret is False:
+                break
     finally:
         sock.close()
 
@@ -116,6 +124,8 @@ def get_reply(player, msg):
     # check if the msg matches one of the spec requests
     # call the appropriate method
     # else ?? TODO
+
+    raise ValueError("Invalid message")
 
     raise NotImplementedError()
 
