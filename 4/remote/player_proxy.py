@@ -1,17 +1,19 @@
 import os
 import sys
 
-PATH_TO_PLAYER = '../3/'
+PATH_TO_PLAYER = '../../3/'
 sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
 
 import json
 import socket
 
-from player import Player
+from player import BasePlayer
 
-SERVER = 'localhost'
+SERVER = socket.gethostname()
 PORT = 45678
 
+class Player(BasePlayer):
+    pass
 
 """
 DATA DEFINITIONS
@@ -70,14 +72,11 @@ def run(server, port):
         sock.close()
 
 
-def read(sock, bufsize=16):
+def read(sock):
     """reads a message from a socket and returns it as JSON
 
     :param sock: socket connection
-    :type sock: Socket
-
-    :param bufsize: buffer size for reading from the socket
-    :type bufsize: int
+    :type sock: socket.SocketType
 
     :returns: JSON message parsed into a python object
     :rtype: JSON
@@ -86,16 +85,16 @@ def read(sock, bufsize=16):
     msg = ''
 
     while not is_valid_json(msg):
-        msg += sock.recv(bufsize)
+        msg += sock.recv(1).decode('utf-8')
 
     return json.loads(msg)
 
 
-def is_valid_json(s):
+def is_valid_json(msg):
     """determines if a message is valid JSON
 
-    :param s: string to check
-    :type s: string
+    :param msg: message to check
+    :type msg: string
 
     :returns: whether input is valid json
     :rtype: bool
@@ -182,7 +181,7 @@ def send(sock, reply):
     """sends a reply over the socket
 
     :param sock: socket connection
-    :type sock: Socket
+    :type sock: socket.SocketType
 
     :param reply: reply message
     :type reply: JSON

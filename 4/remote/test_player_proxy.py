@@ -1,5 +1,8 @@
+import json
 import os
+import socket
 import sys
+from multiprocessing import Process, Queue
 
 PATH_TO_PLAYER = '../../3/'
 sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
@@ -24,15 +27,82 @@ def test_read():
     """tests read
 
     cases:
-        - create TCP socket and write
-        - valid
-            - {}, [], 1, true
-            - start-round, take-turn, choose
+        - {}, [], "", 1, true
+        - combination
+        - start-round, take-turn, choose
         - long waits
-        - out of order action
+        - two writes in a row --> separate read results
     """
 
-    pass
+    server = 'localhost'
+    port = 45678
+    message_queue = Queue()
+
+    write_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    write_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    write_sock.bind((server, port))
+    write_sock.listen(1)
+
+    def run_server(sock):
+        """runs the socket server and sends messages put in the queue
+
+        :param sock: socket to write to
+        :type sock: socket.SocketType
+        """
+
+        connection, _client_address = sock.accept()
+
+        while True:
+            item = str.encode(message_queue.get())
+            connection.sendall(item)
+
+        connection.close()
+
+    Process(target=run_server, args=(write_sock,)).start()
+    read_sock = socket.create_connection((server, port))
+
+    empty_hash = {}
+    empty_list = []
+    single_number = 1
+    single_bool = True
+
+    examples = [
+        empty_hash, empty_list,
+        single_number, single_bool,
+        {'hi': ['yo', 'what']},
+        ['one', 2, {'three': 4}],
+    ]
+
+    for ex in examples:
+        message_queue.put(json.dumps(ex))
+        assert proxy.read(read_sock) == ex
+
+    hand = [[0, 0], [1, 1], [2, 2]]
+    deck = [
+        [[4, 4], [5, 5]],
+        [[6, 6], [7, 7]]
+    ]
+
+    messages = [
+        ["start-round", hand],
+        ["take-turn", deck],
+        ["choose", deck],
+    ]
+
+    def wait_message(sock, message):
+        for char in json.dumps(message):
+            message_queue.put(char)
+
+    for message in messages:
+        Process(target=wait_message, args=(write_sock, message)).start()
+        assert proxy.read(read_sock) == message
+
+    message_queue.put("".join(map(json.dumps, messages)))
+    assert proxy.read(read_sock) == messages[0]
+    assert proxy.read(read_sock) == messages[1]
+    assert proxy.read(read_sock) == messages[2]
+
+    write_sock.close()
 
 
 def test_is_valid_json():
@@ -49,7 +119,8 @@ def test_is_valid_json():
     assert proxy.is_valid_json('{}')
     assert proxy.is_valid_json('true')
     assert proxy.is_valid_json('"\"\""')
-    assert proxy.is_valid_json('"{\"ok: [{}, {}]}"')
+    assert proxy.is_valid_json('{ok: [{}, {}]}')
+    assert proxy.is_valid_json('"'"'"'""'"'"'"')
 
     assert not proxy.is_valid_json('[')
     assert not proxy.is_valid_json('{')
@@ -192,4 +263,25 @@ def test_send():
         - JSON input equals string output on other socket reciever
     """
 
-    pass
+    server = socket.gethostname()
+    port = 45678
+
+    write_sock = socket.create_connection((server, port))
+    read_sock = socket.create_connection((server, port))
+
+    empty_hash = {}
+    empty_list = []
+    empty_string  = ""
+    single_number = 1
+    single_bool = True
+
+    examples = [
+        empty_has, empty_list, empty_string,
+        single_number, single_bool,
+        {'hi': ['yo', 'what']},
+        ['one', 2, {'three': 4}],
+    ]
+
+    for ex in examples:
+        proxy.send(write_sock, ex)
+        assert read_sock.recv(bufsize=len(ex)) == str(ex)
