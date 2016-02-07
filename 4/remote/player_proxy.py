@@ -39,6 +39,9 @@ from player import BasePlayer, Card
 SERVER = socket.gethostname()
 PORT = 45678
 
+MIN_FACE, MAX_FACE = 1, 104
+MIN_BULL, MAX_BULL = 2, 7
+
 
 class Player(BasePlayer):
     def pick_card(self, stacks, opponent_points):
@@ -158,7 +161,7 @@ def read(sock):
 
     msg = ''
 
-    while not is_valid_json(msg.strip()):
+    while not is_valid_json(msg):
         msg += sock.recv(1).decode('utf-8')
 
     return json.loads(msg)
@@ -234,7 +237,9 @@ def validate_request_input(validators):
 
     def wrap(fn):
         def request(player, *args):
-            if not all(validator(arg) for validator, arg in zip(validators, args)):
+            all_valid_inputs = all(
+                validator(arg) for validator, arg in zip(validators, args))
+            if not all_valid_inputs:
                 raise ValueError('Invalid argument type')
             return fn(player, *args)
         return request
@@ -251,9 +256,15 @@ def is_json_card(maybe_json_card):
     :rtype: bool
     """
 
-    return (isinstance(maybe_json_card, list) and
-            len(maybe_json_card) == 2 and
-            all(isinstance(i, int) and i > 0 for i in maybe_json_card))
+    if isinstance(maybe_json_card, list) and len(maybe_json_card) == 2:
+        [face, bull] = maybe_json_card
+
+        return (isinstance(face, int) and
+                isinstance(bull, int) and
+                MIN_FACE <= face <= MAX_FACE and
+                MIN_BULL <= bull <= MAX_BULL)
+
+    return False
 
 
 def is_lcard(maybe_lcard):
@@ -297,6 +308,7 @@ def start_round(player, hand):
     """
 
     player.set_hand([json_card_to_internal(json_card) for json_card in hand])
+    return True
 
 
 @validate_request_input([is_deck])

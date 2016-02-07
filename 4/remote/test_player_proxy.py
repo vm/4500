@@ -3,8 +3,8 @@ import os
 import socket
 import sys
 import time
-from threading import Thread
 from queue import Queue
+from threading import Thread
 
 PATH_TO_PLAYER = '../../3/'
 sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
@@ -23,6 +23,77 @@ class TestPlayer(BasePlayer):
 
     def pick_stack(self, stacks, opponent_points, remaining_cards):
         return CHOSEN_INDEX
+
+
+def test_run():
+    """integration tests for the system"""
+
+    server = 'localhost'
+    port = 45678
+    message_queue = Queue()
+    response_queue = Queue()
+
+    max_message_len = 1000
+
+    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_sock.bind((server, port))
+    server_sock.listen(1)
+
+    def run_server(sock):
+        """runs the socket server and sends messages put in the queue
+
+        :param sock: socket to write to
+        :type sock: socket.SocketType
+        """
+
+        connection, _client_address = sock.accept()
+
+        while True:
+            to_send = message_queue.get()
+            message_queue.task_done()
+            connection.sendall(to_send)
+            response_queue.put(connection.recv(max_message_len))
+
+        connection.close()
+
+    client_thread = Thread(target=proxy.run, args=(server, port))
+    client_thread.setDaemon(True)
+    client_thread.start()
+
+    server_thread = Thread(target=run_server, args=(server_sock,))
+    server_thread.setDaemon(True)
+    server_thread.start()
+
+    player = proxy.Player()
+    validator = proxy.TimingValidator()
+
+    hand = [[7, 7], [4, 4], [2, 2]]
+    deck = [
+        [[4, 4], [5, 5]],
+        [[6, 6], [7, 7]]
+    ]
+
+    start_round_msg = ["start-round", hand]
+    take_turn_msg = ["take-turn", deck]
+    choose_msg = ["choose", deck]
+
+    def bytes_to_json(bytes):
+        return json.loads(bytes.decode('utf-8'))
+
+    def json_to_bytes(json_str):
+        return str.encode(json.dumps(json_str))
+
+    def check_response(msg):
+        message_queue.put(str.encode(json.dumps(msg)))
+        assert (bytes_to_json(response_queue.get()) ==
+                proxy.get_reply(player, validator, msg))
+
+    for msg in [start_round_msg, take_turn_msg, take_turn_msg, choose_msg,
+                start_round_msg]:
+        check_response(msg)
+
+    server_sock.close()
 
 
 def test_read():
@@ -68,7 +139,7 @@ def test_read():
 
     empty_hash = {}
     empty_list = []
-    single_number = 1
+    single_number = 4
     single_bool = True
 
     examples = [
@@ -82,7 +153,7 @@ def test_read():
         message_queue.put(json.dumps(ex))
         assert proxy.read(client_sock) == ex
 
-    hand = [[10, 10], [1, 1], [2, 2]]
+    hand = [[7, 7], [4, 4], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
@@ -135,7 +206,7 @@ def test_is_valid_json():
     assert not proxy.is_valid_json('[')
     assert not proxy.is_valid_json('{')
 
-    stack = [[10, 10], [1, 1], [2, 2]]
+    stack = [[7, 7], [4, 4], [2, 2]]
     assert proxy.is_valid_json('["start-round", {}]'.format(stack))
 
     deck = [stack, stack, stack, stack]
@@ -156,7 +227,7 @@ def test_get_reply_valid():
     player = TestPlayer()
     validator = proxy.TimingValidator()
 
-    hand = [[10, 10], [1, 1], [2, 2]]
+    hand = [[7, 7], [4, 4], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
@@ -191,7 +262,7 @@ def test_get_reply_invalid():
     player = TestPlayer()
     validator = proxy.TimingValidator()
 
-    hand = [[10, 10], [1, 1], [2, 2]]
+    hand = [[7, 7], [4, 4], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
@@ -233,9 +304,9 @@ def test_start_round():
     """
 
     player = TestPlayer()
-    hand = [[10, 10], [1, 1], [2, 2], [3, 3]]
-    proxy.start_round(player, hand)
+    hand = [[7, 7], [4, 4], [2, 2], [3, 3]]
 
+    assert proxy.start_round(player, hand) is True
     assert player._hand == [Card(*json_card) for json_card in hand]
 
 
@@ -247,8 +318,8 @@ def test_take_turn():
     """
 
     player = TestPlayer()
-    card = Card(10, 10)
-    hand = [card, Card(1, 1), Card(2, 2), Card(3, 3)]
+    card = Card(7, 7)
+    hand = [card, Card(4, 4), Card(2, 2), Card(3, 3)]
 
     deck = [[[4, 4], [5, 5]]]
 
@@ -265,10 +336,10 @@ def test_choose():
 
     player = TestPlayer()
     deck = [
-        [[10, 10], [1, 1], [2, 2], [3, 3]],
-        [[1, 10], [1, 1], [2, 2], [3, 3]],
-        [[2, 10], [1, 1], [2, 2], [3, 3]],
-        [[3, 10], [1, 1], [2, 2], [3, 3]],
+        [[7, 7], [4, 4], [2, 2], [3, 3]],
+        [[4, 7], [4, 4], [2, 2], [3, 3]],
+        [[2, 7], [4, 4], [2, 2], [3, 3]],
+        [[3, 7], [4, 4], [2, 2], [3, 3]],
     ]
 
     assert proxy.choose(player, deck) == deck[CHOSEN_INDEX]
@@ -314,7 +385,7 @@ def test_send():
 
     empty_hash = {}
     empty_list = []
-    single_number = 1
+    single_number = 4
     single_bool = True
 
     examples = [
@@ -328,7 +399,7 @@ def test_send():
         proxy.send(client_sock, ex)
         assert str.encode(json.dumps(ex)) == message_queue.get()
 
-    hand = [[10, 10], [1, 1], [2, 2]]
+    hand = [[7, 7], [4, 4], [2, 2]]
     deck = [
         [[4, 4], [5, 5]],
         [[6, 6], [7, 7]]
