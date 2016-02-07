@@ -38,10 +38,10 @@ def test_read():
     port = 45678
     message_queue = Queue()
 
-    write_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    write_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    write_sock.bind((server, port))
-    write_sock.listen(1)
+    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_sock.bind((server, port))
+    server_sock.listen(1)
 
     def run_server(sock):
         """runs the socket server and sends messages put in the queue
@@ -58,8 +58,8 @@ def test_read():
 
         connection.close()
 
-    Process(target=run_server, args=(write_sock,)).start()
-    read_sock = socket.create_connection((server, port))
+    Process(target=run_server, args=(server_sock,)).start()
+    client_sock = socket.create_connection((server, port))
 
     empty_hash = {}
     empty_list = []
@@ -75,7 +75,7 @@ def test_read():
 
     for ex in examples:
         message_queue.put(json.dumps(ex))
-        assert proxy.read(read_sock) == ex
+        assert proxy.read(client_sock) == ex
 
     hand = [[10, 10], [1, 1], [2, 2]]
     deck = [
@@ -94,15 +94,15 @@ def test_read():
             message_queue.put(char)
 
     for message in messages:
-        Process(target=wait_message, args=(write_sock, message)).start()
-        assert proxy.read(read_sock) == message
+        Process(target=wait_message, args=(server_sock, message)).start()
+        assert proxy.read(client_sock) == message
 
     message_queue.put("".join(map(json.dumps, messages)))
-    assert proxy.read(read_sock) == messages[0]
-    assert proxy.read(read_sock) == messages[1]
-    assert proxy.read(read_sock) == messages[2]
+    assert proxy.read(client_sock) == messages[0]
+    assert proxy.read(client_sock) == messages[1]
+    assert proxy.read(client_sock) == messages[2]
 
-    write_sock.close()
+    client_sock.close()
 
 
 def test_is_valid_json():
@@ -145,6 +145,7 @@ def test_get_reply_valid():
     """
 
     player = TestPlayer()
+    validator = proxy.TimingValidator()
 
     hand = [[10, 10], [1, 1], [2, 2]]
     deck = [
@@ -152,21 +153,21 @@ def test_get_reply_valid():
         [[6, 6], [7, 7]]
     ]
 
-    start_round_msg = ["start_round", hand]
-    take_turn_msg = ["take_turn", deck]
+    start_round_msg = ["start-round", hand]
+    take_turn_msg = ["take-turn", deck]
     choose_msg = ["choose", deck]
 
-    assert (proxy.get_reply(player, start_round_msg) ==
+    assert (proxy.get_reply(player, validator, start_round_msg) ==
             proxy.start_round(player, hand))
-    assert (proxy.get_reply(player, take_turn_msg) ==
+    assert (proxy.get_reply(player, validator, take_turn_msg) ==
             proxy.take_turn(player, deck))
-    assert (proxy.get_reply(player, choose_msg) ==
+    assert (proxy.get_reply(player, validator, choose_msg) ==
             proxy.choose(player, deck))
-    assert (proxy.get_reply(player, take_turn_msg) ==
+    assert (proxy.get_reply(player, validator, take_turn_msg) ==
             proxy.take_turn(player, deck))
-    assert (proxy.get_reply(player, take_turn_msg) ==
+    assert (proxy.get_reply(player, validator, take_turn_msg) ==
             proxy.take_turn(player, deck))
-    assert (proxy.get_reply(player, choose_msg) ==
+    assert (proxy.get_reply(player, validator, choose_msg) ==
             proxy.choose(player, deck))
 
 
@@ -179,6 +180,7 @@ def test_get_reply_invalid():
     """
 
     player = TestPlayer()
+    validator = proxy.TimingValidator()
 
     hand = [[10, 10], [1, 1], [2, 2]]
     deck = [
@@ -186,27 +188,33 @@ def test_get_reply_invalid():
         [[6, 6], [7, 7]]
     ]
 
-    start_round_msg = ["start_round", hand]
-    take_turn_msg = ["take_turn", deck]
+    start_round_msg = ["start-round", hand]
+    take_turn_msg = ["take-turn", deck]
     choose_msg = ["choose", deck]
 
-    bad_msg = ["bad"]
-    bad_start_round_msg = ["start_round"]
-    bad_take_turn_msg = ["take_turn", deck, True]
+    bad_msg = ["bad", None]
+    bad_start_round_msg = ["start-round"]
+    bad_take_turn_msg = ["take-turn", deck, True]
     bad_choose_msg = ["choose", "choose again"]
 
-    proxy.get_reply(player, start_round_msg)
+    proxy.get_reply(player, validator, start_round_msg)
 
     with pytest.raises(ValueError):
-        proxy.get_reply(player, bad_msg)
+        proxy.get_reply(player, validator, None)
 
-    assert proxy.get_reply(player, choose_msg) is False
+    with pytest.raises(ValueError):
+        proxy.get_reply(player, validator, bad_msg)
 
-    assert (proxy.get_reply(player, take_turn_msg) ==
+    assert proxy.get_reply(player, validator, choose_msg) is False
+
+    assert (proxy.get_reply(player, validator, take_turn_msg) ==
             proxy.take_turn(player, deck))
 
-    assert proxy.get_reply(player, start_round_msg) is False
+    assert proxy.get_reply(player, validator, start_round_msg) is False
 
+    with pytest.raises(ValueError):
+        proxy.get_reply(player, validator,
+                        ["this is totally not a request", None])
 
 def test_start_round():
     """tests start_round
@@ -264,31 +272,70 @@ def test_send():
         - JSON input equals string output on other socket reciever
     """
 
-    server = socket.gethostname()
+    server = 'localhost'
     port = 45678
+    message_queue = Queue()
+    max_message_len = 1000
 
-    write_sock = socket.create_connection((server, port))
-    read_sock = socket.create_connection((server, port))
+    server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_sock.bind((server, port))
+    server_sock.listen(1)
+
+    def run_server(sock):
+        """runs the socket server and sends messages put in the queue
+
+        :param sock: socket to write to
+        :type sock: socket.SocketType
+        """
+
+        connection, _client_address = sock.accept()
+
+        while True:
+            item = connection.recv(max_message_len)
+            message_queue.put(item)
+
+        connection.close()
+
+    Process(target=run_server, args=(server_sock,)).start()
+    client_sock = socket.create_connection((server, port))
 
     empty_hash = {}
     empty_list = []
-    empty_string = ""
     single_number = 1
     single_bool = True
 
     examples = [
-        empty_has, empty_list, empty_string,
+        empty_hash, empty_list,
         single_number, single_bool,
         {'hi': ['yo', 'what']},
         ['one', 2, {'three': 4}],
     ]
 
     for ex in examples:
-        proxy.send(write_sock, ex)
-        assert read_sock.recv(bufsize=len(ex)) == str(ex)
+        proxy.send(client_sock, ex)
+        assert str.encode(json.dumps(ex)) == message_queue.get()
+
+    hand = [[10, 10], [1, 1], [2, 2]]
+    deck = [
+        [[4, 4], [5, 5]],
+        [[6, 6], [7, 7]]
+    ]
+
+    messages = [
+        ["start-round", hand],
+        ["take-turn", deck],
+        ["choose", deck],
+    ]
+
+    for message in messages:
+        proxy.send(client_sock, message)
+        assert str.encode(json.dumps(message)) == message_queue.get()
+
+    client_sock.close()
 
 
-def test_validate_request():
+def test_validate_request_input():
     """tests the validate request decorator
 
     cases:
@@ -309,7 +356,7 @@ def test_validate_request():
 
     player = TestPlayer()
     inner_fn = lambda player, deck: (player, deck)
-    dummy_fn = proxy.validate_request([proxy.is_deck])(inner_fn)
+    dummy_fn = proxy.validate_request_input([proxy.is_deck])(inner_fn)
 
     assert dummy_fn(player, good_deck) == inner_fn(player, good_deck)
 

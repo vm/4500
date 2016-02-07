@@ -24,6 +24,7 @@ DATA DEFINITIONS
         - dict
 """
 
+
 import os
 import sys
 
@@ -77,6 +78,43 @@ class Player(BasePlayer):
                    key=lambda i: sum(card.bull for card in stacks[i]))
 
 
+class TimingValidator:
+    """class for tracking request timing"""
+
+    valid_next_states = {
+        None: {'start-round'},
+        'start-round': {'take-turn'},
+        'take-turn': {'take-turn', 'choose'},
+        'choose': {'take-turn'},
+    }
+
+    def __init__(self):
+        self._latest_request = None
+
+    def is_valid_transition(self, next_request):
+        """checks if the next request is will be valid
+
+        :param next_request: request to check
+        :type next_request: str
+
+        :returns: whether the request satisfies the timing specification
+        :rtype: bool
+        """
+
+        return next_request in self.valid_next_states[self._latest_request]
+
+    def update(self, request):
+        """updates the latest request
+
+        :param request: new request
+        :type request: str
+        """
+
+        if not request in self.valid_next_states:
+            raise ValueError('Unknown request type')
+
+        self._latest_request = request
+
 def run(server, port):
     """opens a socket and plays a game over the socket
 
@@ -89,19 +127,20 @@ def run(server, port):
 
     sock = socket.create_connection((server, port))
     player = Player()
+    validator = TimingValidator()
 
     try:
         while True:
             msg = read(sock)
 
             try:
-                ret = get_reply(player, msg)
+                reply = get_reply(player, validator, msg)
             except ValueError:
                 break
 
-            send(sock, ret)
+            send(sock, reply)
 
-            if ret is False:
+            if reply is False:
                 break
     finally:
         sock.close()
@@ -142,11 +181,14 @@ def is_valid_json(msg):
         return False
 
 
-def get_reply(player, msg):
+def get_reply(player, validator, msg):
     """gets a player's reply to a message
 
     :param player: player playing the game
     :type player: Player
+
+    :param validator: request order validator
+    :type validatior: TimingValidator
 
     :param msg: message
     :type msg: JSON
@@ -161,16 +203,21 @@ def get_reply(player, msg):
         'choose': choose
     }
 
-    if not isinstance(msg, list) or len(msg) < 2:
+    if not isinstance(msg, list) or not msg:
         raise ValueError('Incorrect message format')
 
     request_type = msg[0]
     params = msg[1:]
 
-    if not request_type in request_map:
+    if request_type not in request_type_to_fn:
         raise ValueError('Incorrect message format')
 
+    if not validator.is_valid_transition(request_type):
+        return False
+
     request_fn = request_type_to_fn[request_type]
+    validator.update(request_type)
+
     return request_fn(player, *params)
 
 
@@ -215,14 +262,16 @@ def is_deck(maybe_deck):
     return isinstance(maybe_deck, list) and all(map(is_lcard, maybe_deck))
 
 
-def validate_request(validators):
+def validate_request_input(validators):
     """validates function input with validators
 
     :param validators: list of validator functions in argument order
-    :type validators: list of fn: JSON -> bool
+    :type validators: list of func: JSON -> bool
 
-    :returns: function with input validation
+    :returns: request function with input validation
     :rtype: func
+
+    :raises: ValueError if input is invalid
     """
 
     def wrap(fn):
@@ -234,7 +283,7 @@ def validate_request(validators):
     return wrap
 
 
-@validate_request([is_lcard])
+@validate_request_input([is_lcard])
 def start_round(player, hand):
     """starts a round
 
@@ -251,7 +300,7 @@ def start_round(player, hand):
     player.set_hand([json_card_to_internal(json_card) for json_card in hand])
 
 
-@validate_request([is_deck])
+@validate_request_input([is_deck])
 def take_turn(player, deck):
     """takes a turn
 
@@ -270,7 +319,8 @@ def take_turn(player, deck):
 
     return json_card_from_internal(card)
 
-@validate_request([is_deck])
+
+@validate_request_input([is_deck])
 def choose(player, deck):
     """chooses a stack
 
@@ -300,7 +350,7 @@ def send(sock, reply):
     :type reply: JSON
     """
 
-    raise NotImplementedError()
+    sock.sendall(str.encode(json.dumps(reply)))
 
 
 def json_card_to_internal(json_card):
