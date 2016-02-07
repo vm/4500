@@ -158,7 +158,7 @@ def read(sock):
 
     msg = ''
 
-    while not is_valid_json(msg):
+    while not is_valid_json(msg.strip()):
         msg += sock.recv(1).decode('utf-8')
 
     return json.loads(msg)
@@ -206,8 +206,7 @@ def get_reply(player, validator, msg):
     if not isinstance(msg, list) or not msg:
         raise ValueError('Incorrect message format')
 
-    request_type = msg[0]
-    params = msg[1:]
+    request_type, *params = msg
 
     if request_type not in request_type_to_fn:
         raise ValueError('Incorrect message format')
@@ -219,6 +218,27 @@ def get_reply(player, validator, msg):
     validator.update(request_type)
 
     return request_fn(player, *params)
+
+
+def validate_request_input(validators):
+    """validates function input with validators
+
+    :param validators: list of validator functions in argument order
+    :type validators: list of func: JSON -> bool
+
+    :returns: request function with input validation
+    :rtype: func
+
+    :raises: ValueError if input is invalid
+    """
+
+    def wrap(fn):
+        def request(player, *args):
+            if not all(validator(arg) for validator, arg in zip(validators, args)):
+                raise ValueError('Invalid argument type')
+            return fn(player, *args)
+        return request
+    return wrap
 
 
 def is_json_card(maybe_json_card):
@@ -260,27 +280,6 @@ def is_deck(maybe_deck):
     """
 
     return isinstance(maybe_deck, list) and all(map(is_lcard, maybe_deck))
-
-
-def validate_request_input(validators):
-    """validates function input with validators
-
-    :param validators: list of validator functions in argument order
-    :type validators: list of func: JSON -> bool
-
-    :returns: request function with input validation
-    :rtype: func
-
-    :raises: ValueError if input is invalid
-    """
-
-    def wrap(fn):
-        def request(player, *args):
-            if not all(validator(arg) for validator, arg in zip(validators, args)):
-                raise ValueError('Invalid argument type')
-            return fn(player, *args)
-        return request
-    return wrap
 
 
 @validate_request_input([is_lcard])
@@ -363,7 +362,7 @@ def json_card_to_internal(json_card):
     :rtype: Card
     """
 
-    face, bull = json_card[0], json_card[1]
+    [face, bull] = json_card
     return Card(face, bull)
 
 

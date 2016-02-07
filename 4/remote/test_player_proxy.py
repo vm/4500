@@ -2,7 +2,9 @@ import json
 import os
 import socket
 import sys
-from multiprocessing import Process, Queue
+import time
+from threading import Thread
+from queue import Queue
 
 PATH_TO_PLAYER = '../../3/'
 sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
@@ -58,7 +60,10 @@ def test_read():
 
         connection.close()
 
-    Process(target=run_server, args=(server_sock,)).start()
+    thread = Thread(target=run_server, args=(server_sock,))
+    thread.setDaemon(True)
+    thread.start()
+
     client_sock = socket.create_connection((server, port))
 
     empty_hash = {}
@@ -94,7 +99,10 @@ def test_read():
             message_queue.put(char)
 
     for message in messages:
-        Process(target=wait_message, args=(server_sock, message)).start()
+        thread = Thread(target=wait_message, args=(server_sock, message))
+        thread.setDaemon(True)
+        thread.start()
+
         assert proxy.read(client_sock) == message
 
     message_queue.put("".join(map(json.dumps, messages)))
@@ -103,6 +111,7 @@ def test_read():
     assert proxy.read(client_sock) == messages[2]
 
     client_sock.close()
+    server_sock.close()
 
 
 def test_is_valid_json():
@@ -297,7 +306,10 @@ def test_send():
 
         connection.close()
 
-    Process(target=run_server, args=(server_sock,)).start()
+    thread = Thread(target=run_server, args=(server_sock,))
+    thread.setDaemon(True)
+    thread.start()
+
     client_sock = socket.create_connection((server, port))
 
     empty_hash = {}
@@ -333,6 +345,7 @@ def test_send():
         assert str.encode(json.dumps(message)) == message_queue.get()
 
     client_sock.close()
+    server_sock.close()
 
 
 def test_validate_request_input():
