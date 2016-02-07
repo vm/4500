@@ -1,3 +1,9 @@
+import os
+import sys
+
+PATH_TO_PLAYER = '../../3/'
+sys.path.append(os.path.join(os.path.dirname(__file__), PATH_TO_PLAYER))
+
 import pytest
 
 from dealer import Dealer
