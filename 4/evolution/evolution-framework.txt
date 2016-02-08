@@ -18,14 +18,14 @@ WateringHole is a [LTrait, Tokens]
 
 LPlayer is a [Player, ..., Player]
 Player is a [LSpecies, DiscardedCards, FoodBag]
-- DiscardedCards is an LTrait of cards not exchanged or places on species
+- DiscardedCards is an LTrait of cards not exchanged or placed on species
 
 FoodBag is an integer
 
 LSpecies is a [Species, ..., Species]
 Species is a [SpeciesTraits, BodySize, Population]
-- BodySize is an interger
-- Population is an integer
+- BodySize is a natural number
+- Population is a natural number
 - SpeciesTraits is an LTrait whose length is in the interval [0, 3]
 
 LTrait is a [Trait, ..., Trait]
@@ -165,7 +165,6 @@ place_cards_on_boards
 
 Description:
 - Asks which cards to place on boards
-- Return is a list of cards chosen to place on boards
 - If returned list is not empty, Dealer asks players to choose boards with
   select_board_for_card
 
@@ -216,6 +215,8 @@ trade_cards_for_body_size
 
 Description:
 - Trades cards for increased body size of a species
+- If returned list is not empty, Dealer asks players to choose boards with
+  select_board_to_give_body_size
 
 Arguments:
 cards (LTrait) - cards to choose from to trade for body size
@@ -247,6 +248,8 @@ trade_cards_for_population
 
 Description:
 - Trades cards for increased population of a species
+- If returned list is not empty, Dealer asks players to choose boards with
+  select_board_to_give_population
 
 Arguments:
 cards (LTrait) - cards to choose from to trade for population
