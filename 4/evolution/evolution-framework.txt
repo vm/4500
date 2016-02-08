@@ -345,12 +345,12 @@ AMBIGUITIES
 In Step 1 of turn, does a trait card per existing species include
 the species just handed to each player?
 
-In Step 3, can you exchange as many cards as you want for boards, body size,
+In Step 3, can one exchange as many cards as they want for boards, body size,
 and population?
 
-In Step 3, can you exchange cards for combinations of each option?
+In Step 3, can one exchange cards for combinations of each option?
 
-Can you change your linear order each turn? How do new boards get added
+Can one change their linear order each turn? How do new boards get added
 to the order?
 
 For the Fat Tissue trait, is body size count a limit on how many food tokens
@@ -362,7 +362,7 @@ game that are not associated with a species/traded.
 If a species' population goes to zero, it becomes extinct and the player
 receives two trait cards in return. When can the player use these trait cards?
 Can they immediately be placed? Can they be exchanged in the way of other trait
-cards? Do the player wait for the start of the next turn?
+cards? Does the player wait for the start of the next turn?
 
 Cooperation feeds the species to its right one token of food every time it eats
 (taken from the common food supply). What is the common food supply? The tokens
