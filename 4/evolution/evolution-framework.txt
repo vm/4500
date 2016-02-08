@@ -1,0 +1,377 @@
+                  _       _   _
+                 | |     | | (_)
+   _____   _____ | |_   _| |_ _  ___  _ __
+  / _ \ \ / / _ \| | | | | __| |/ _ \| '_ \
+ |  __/\ V / (_) | | |_| | |_| | (_) | | | |
+  \___| \_/ \___/|_|\__,_|\__|_|\___/|_| |_|
+
+
+----------------
+DATA DEFINITIONS
+----------------
+
+Dealer is a [LPlayer, Deck, WateringHole]
+- Deck is an LTrait
+
+WateringHole is a [LTrait, Tokens]
+- Tokens is an integer
+
+LPlayer is a [Player, ..., Player]
+Player is a [LSpecies, DiscardedCards, FoodBag]
+- DiscardedCards is an LTrait of cards not exchanged or placed on species
+
+FoodBag is an integer
+
+LSpecies is a [Species, ..., Species]
+Species is a [SpeciesTraits, BodySize, Population]
+- BodySize is a natural number
+- Population is a natural number
+- SpeciesTraits is an LTrait whose length is in the interval [0, 3]
+
+LTrait is a [Trait, ..., Trait]
+Trait is one of:
+- [CarnivoreTokens, "Carnivore"]
+- [VegetarianTokens, VegetarianTraitType]
+
+CarnivoreTokens is an integer in the interval [-8, 8]
+VegetarianTokens is an integer in the interval [-3, 3]
+
+VegetarianTraitType is one of:
+- "Ambush"
+- "Burrowing"
+- "Climbing"
+- "Cooperation"
+- "Fat Tissue"
+- "Fertile"
+- "Foraging"
+- "Hard Shell"
+- "Herding"
+- "Horns"
+- "Long Neck"
+- "Pack Hunting"
+- "Scavenger"
+- "Symbiosis"
+- "Warning Call"
+
+
+------
+DOODLE
+------
+
+   +--------+                 +--------+
+   | dealer |                 | player |
+   +---+----+                 +----+---+
+       |                           |
+       |                           |
+       |                           |
+       | place_cards_on_boards     |
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | select_board_for_card     |
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | trade_cards_for_boards    |
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | trade_cards_for_body_size |
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | select_board_to_give_body_size
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | trade_cards_for_population|
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | select_board_to_give_population
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | select_species_order      |
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | select_species_discarded_cards
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       |                           |
+       | select_attack             |
+       +------------------------>  |
+       |                           |
+       | <-------------------------+
+       | <-------------------------+
+       |                           |
+       |                           |
+       .                           .
+       . repeat until empty deck   .
+       .                           .
+       |                           |
+       |                           |
+       | game_over                 |
+       +------------------------>  |
+       |                           |
+       |                           |
+       |                           |
+       +                           +
+
+
+--------
+REQUESTS
+--------
+
+place_cards_on_boards
+---------------------
+
+Description:
+- Asks which cards to place on boards
+- If returned list is not empty, Dealer asks players to choose boards with
+  select_board_for_card
+
+Arguments:
+cards (LTrait) - cards to choose from to place on player boards
+boards (LSpecies) - boards to place cards on
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(LTrait) - cards chosen to place on boards (can be empty)
+
+
+select_board_for_card
+---------------------
+
+Description:
+- Asks which species board to place the given card on
+
+Arguments:
+card (Trait) - card to place
+boards (LSpecies) - boards to choose from to place cards on
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(int) - index of the board to place the card on
+
+
+trade_cards_for_boards
+----------------------
+
+Description:
+- Trades cards for additional species boards
+
+Arguments:
+cards (LTrait) - cards to choose from to trade for boards
+boards (LSpecies) - player's boards
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(LTrait) - cards chosen to trade for boards (can be empty)
+
+
+trade_cards_for_body_size
+-------------------------
+
+Description:
+- Trades cards for increased body size of a species
+- If returned list is not empty, Dealer asks players to choose boards with
+  select_board_to_give_body_size
+
+Arguments:
+cards (LTrait) - cards to choose from to trade for body size
+boards (LSpecies) - player's boards
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(LTrait) - cards chosen to trade for body size (can be empty)
+
+
+select_board_to_give_body_size
+------------------------------
+
+Description:
+- Selects a board to increase the body size of
+
+Arguments:
+boards (LSpecies) - player's boards
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(int) - index of the board to add body size to
+
+
+trade_cards_for_population
+-------------------------
+
+Description:
+- Trades cards for increased population of a species
+- If returned list is not empty, Dealer asks players to choose boards with
+  select_board_to_give_population
+
+Arguments:
+cards (LTrait) - cards to choose from to trade for population
+boards (LSpecies) - player's boards
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(LTrait) - cards chosen to trade for population (can be empty)
+
+
+select_board_to_give_population
+-------------------------------
+
+Description:
+- Selects a board to increase the population of
+
+Arguments:
+boards (LSpecies) - player's boards
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+(int) - index of the board to add population to
+
+
+select_species_order
+--------------------
+
+Description:
+- Determines an order for their species boards
+
+Arguments:
+boards (LSpecies) - player's boards
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Return:
+([int, ..., int]) - sorted indices of the player's boards
+
+
+select_species_discarded_cards
+------------------------------
+
+Descriptions:
+- Determines which cards to discard from a board as a result of flipping
+  new cards
+
+Arguments:
+old_cards (LTrait) - old cards to choose from to discard
+new_cards (LTrait) - trait cards replacing the old_cards
+board (Player) - board whose cards are being replaced. includes old cards
+player (Player) - player's state. includes board with old cards
+opponents (LPlayer) - opponent states
+
+Return:
+([int, ..., int]) - indicies of old_cards to discard
+
+
+select_attack
+-------------
+
+Descriptions:
+- Determines who to attack
+
+Arguments:
+board (Species) - species board that is attacking
+player (Player) - player's state
+opponents (LPlayer) - opponent states
+
+Returns:
+([int, int]) - indicies of player to attack and board to attack, respectively
+
+
+game_over
+---------
+
+Description
+- Informs the player of game results
+
+Arguments:
+players (LPlayer) - player states in order of rank (winner, runner-up, etc)
+me (int) - index of the player
+
+Returns:
+None
+
+
+-----------
+AMBIGUITIES
+-----------
+
+In Step 1 of turn, does a trait card per existing species include
+the species just handed to each player?
+
+In Step 3, can you exchange as many cards as you want for boards, body size,
+and population?
+
+In Step 3, can you exchange cards for combinations of each option?
+
+Can you change your linear order each turn? How do new boards get added
+to the order?
+
+For the Fat Tissue trait, is body size count a limit on how many food tokens
+can be added? Can each animal in the population store body size food tokens?
+
+What happens to trait cards associated with the player for the rest of the
+game that are not associated with a species/traded.
+
+If a species' population goes to zero, it becomes extinct and the player
+receives two trait cards in return. When can the player use these trait cards?
+Can they immediately be placed? Can they be exchanged in the way of other trait
+cards? Do the player wait for the start of the next turn?
+
+Cooperation feeds the species to its right one token of food every time it eats
+(taken from the common food supply). What is the common food supply? The tokens
+given to the species from the watering hole, or the watering hole itself?
+
+Fat Tissue allows a species to store as many food tokens as its body size count.
+Foraging enables this species to eat two tokens of food for every feeding.
+When a species has both of these, which governs how many food tokens a
+species takes?
+
+When a player exchanged cards for boards, population, etc, does the dealer add
+those cards back into the deck, or discard them, or something else?
