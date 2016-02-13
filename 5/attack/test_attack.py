@@ -1,6 +1,8 @@
 import pytest
 
-from attack import Species, TraitCard, TraitKind, is_attackable
+from attack.attack import is_attackable
+from attack.trait import Trait, trait_name_to_class
+from attack.situation import Species
 
 """
 TODO
@@ -8,6 +10,7 @@ TODO
 multiple of each trait that counter eachother
 ex: 2 warning call, 1 ambush
 """
+
 
 def test_not_carnivore():
     """tests that an error is raised when the attacker is not a carnivore"""
@@ -25,7 +28,7 @@ def assert_case(case):
     :type case: dict
     """
 
-    result = cases['result']
+    result = case['result']
     attacker = json_to_species(case['attacker'])
     defender = json_to_species(case['defender'])
 
@@ -46,9 +49,11 @@ def json_to_species(json_species):
 
     if 'traits' in json_species:
         num_tokens = 0
-        trait_kinds = json_species['traits']
-
-        species.traits = [TraitCard(tk, num_tokens) for tk in trait_kinds]
+        trait_names = json_species['traits']
+        species.traits = [
+            trait_name_to_class[name](num_tokens)
+            for name in trait_names
+        ]
 
     species.body_size = json_species.get(
         'body_size', Species.DEFAULT_BODY_SIZE)
@@ -65,30 +70,30 @@ def test_ambush():
     cases = [
         {
             'attacker': {
-                'traits': ['CARNIVORE', 'AMBUSH']
+                'traits': ['carnivore', 'ambush']
             },
             'defender': {
-                'traits': ['WARNING_CALL']
+                'traits': ['warning-call']
             },
             'result': True
         },
         {
             'attacker': {
-                'traits': ['CARNIVORE', 'AMBUSH']
+                'traits': ['carnivore', 'ambush']
             },
             'defender': {},
             'left_neighbor': {
-                'traits': ['WARNING_CALL']
+                'traits': ['warning-call']
             },
             'result': True
         },
         {
             'attacker': {
-                'traits': ['CARNIVORE', 'AMBUSH']
+                'traits': ['carnivore', 'ambush']
             },
             'defender': {},
             'right_neighbor': {
-                'traits': ['WARNING_CALL']
+                'traits': ['warning-call']
             },
             'result': True
         },
@@ -99,196 +104,282 @@ def test_ambush():
 
 
 def test_burrowing():
-    """tests the Burrowing trait
+    """tests the Burrowing trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore]
-        defender:
-            traits: [Burrowing]
-            population: 4
-            food_supply: 4
-        left_neighbor: none
-        right_neighbor: none
-        result: false
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore']
+            },
+            'defender': {
+                'traits': ['burrowing'],
+                'population': 4,
+                'food_supply': 4,
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore']
+            },
+            'defender': {
+                'traits': ['burrowing'],
+                'population': 4,
+                'food_supply': 0,
+            },
+            'result': True,
+        }
+    ]
 
-        attacker:
-            traits: [Carnivore]
-        defender:
-            traits: [Burrowing]
-            population: 4
-            food_supply: 0
-        left_neighbor: none
-        right_neighbor: none
-        result: true
-    """
+    for case in cases:
+        assert_case(case)
 
-    raise NotImplementedError()
 
 def test_climbing():
-    """tests the Climbing trait
+    """tests the Climbing trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore]
-        defender:
-            traits: [Climbing]
-        result: false
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore']
+            },
+            'defender': {
+                'traits': ['climbing'],
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore', 'climbing']
+            },
+            'defender': {
+                'traits': ['climbing'],
+            },
+            'result': True,
+        },
+    ]
 
-        attacker:
-            traits: [Carnivore, Climbing]
-        defender:
-            traits: [Climbing]
-        result: true
-    """
+    for case in cases:
+        assert_case(case)
 
-    raise NotImplementedError()
 
 def test_hard_shell():
-    """tests the Hard Shell trait
+    """tests the Hard Shell trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore]
-            body_size: 4
-        defender:
-            traits: [Hard Shell]
-            body_size: 1
-        result: false
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+                'body_size': 4,
+            },
+            'defender': {
+                'traits': ['hard-shell'],
+                'body_size': 1,
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+                'body_size': 5,
+            },
+            'defender': {
+                'traits': ['hard-shell'],
+                'body_size': 1,
+            },
+            'result': True,
+        },
+    ]
 
-        attacker:
-            traits: [Carnivore]
-            body_size: 5
-        defender:
-            traits: [Hard Shell]
-            body_size: 1
-        result: true
-    """
-
-    raise NotImplementedError()
+    for case in cases:
+        assert_case(case)
 
 def test_herding():
-    """tests the Herding trait
+    """tests the Herding trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore]
-            population: 3
-        defender:
-            traits: [Herding]
-            population: 4
-        result: false
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+                'population': 3,
+            },
+            'defender': {
+                'traits': ['herding'],
+                'population': 4,
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+                'population': 4,
+            },
+            'defender': {
+                'traits': ['herding'],
+                'population': 4,
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+                'population': 5,
+            },
+            'defender': {
+                'traits': ['herding'],
+                'population': 4,
+            },
+            'result': True,
+        },
+    ]
 
-        attacker:
-            traits: [Carnivore]
-            population: 4
-        defender:
-            traits: [Herding]
-            population: 4
-        result: false
+    for case in cases:
+        assert_case(case)
 
-        attacker:
-            traits: [Carnivore]
-            population: 5
-        defender:
-            traits: [Herding]
-            population: 4
-        result: true
-    """
-
-    raise NotImplementedError()
 
 def test_pack_hunting():
-    """tests the Pack Hunting trait
+    """tests the Pack Hunting trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore, Pack Hunting]
-            body_size: 4
-            population: 1
-        defender:
-            traits: [Hard Shell]
-            body_size: 1
-        result: true
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore', 'pack-hunting'],
+                'body_size': 4,
+                'population': 1,
+            },
+            'defender': {
+                'traits': ['hard-shell'],
+                'body_size': 1,
+            },
+            'result': True,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore', 'pack-hunting'],
+                'body_size': 3,
+                'population': 1,
+            },
+            'defender': {
+                'traits': ['hard-shell'],
+                'body_size': 1,
+            },
+            'result': False,
+        },
+    ]
 
-        attacker:
-            traits: [Carnivore, Pack Hunting]
-            body_size: 3
-            population: 1
-        defender:
-            traits: [Hard Shell]
-            body_size: 1
-        result: false
-    """
+    for case in cases:
+        assert_case(case)
 
-    raise NotImplementedError()
 
 def test_symbiosis():
-    """tests the Symbiosis trait
+    """tests the Symbiosis trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore]
-        defender:
-            body_size: 2
-            traits: [Symbiosis]
-        right_neighbor:
-            body_size: 4
-        result: false
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {
+                'traits': ['symbiosis'],
+                'body_size': 2,
+            },
+            'right_neighbor': {
+                'body_size': 4,
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {
+                'traits': ['symbiosis'],
+                'body_size': 6,
+            },
+            'right_neighbor': {
+                'body_size': 4,
+            },
+            'result': True,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {
+                'traits': ['symbiosis'],
+                'body_size': 2,
+            },
+            'left_neighbor': {
+                'body_size': 4,
+            },
+            'result': True,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {
+                'traits': ['symbiosis'],
+                'body_size': 2,
+            },
+            'left_neighbor': {
+                'body_size': 4,
+            },
+            'result': True,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {
+                'traits': ['symbiosis'],
+                'body_size': 6,
+            },
+            'left_neighbor': {
+                'body_size': 4,
+            },
+            'result': True,
+        },
+    ]
 
-        attacker:
-            traits: [Carnivore]
-        defender:
-            body_size: 6
-            traits: [Symbiosis]
-        right_neighbor:
-            body_size: 4
-        result: true
+    for case in cases:
+        assert_case(case)
 
-        attacker:
-            traits: [Carnivore]
-        defender:
-            body_size: 2
-            traits: [Symbiosis]
-        left_neighbor:
-            body_size: 4
-        result: true
-
-        attacker:
-            traits: [Carnivore]
-        defender:
-            body_size: 6
-            traits: [Symbiosis]
-        left_neighbor:
-            body_size: 4
-        result: true
-    """
-
-    raise NotImplementedError()
 
 def test_warning_call():
-    """tests the Warning Call trait
+    """tests the Warning Call trait"""
 
-    cases:
-        attacker:
-            traits: [Carnivore]
-        defender:
-            traits: [Warning Call]
-        result: true
+    cases = [
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {
+                'traits': ['warning-call'],
+            },
+            'result': True,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {},
+            'left_neighbor': {
+                'traits': ['warning-call'],
+            },
+            'result': False,
+        },
+        {
+            'attacker': {
+                'traits': ['carnivore'],
+            },
+            'defender': {},
+            'right_neighbor': {
+                'traits': ['warning-call'],
+            },
+            'result': False,
+        },
+    ]
 
-        attacker:
-            traits: [Carnivore]
-        defender:
-        left_neighbor:
-            traits: [Warning Call]
-        result: false
-
-        attacker:
-            traits: [Carnivore]
-        defender:
-        right_neighbor:
-            traits: [Warning Call]
-        result: false
-    """
-
-    raise NotImplementedError()
+    for case in cases:
+        assert_case(case)
