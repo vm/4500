@@ -71,14 +71,14 @@ class Species:
         if body_size is None:
             self.body_size = self.DEFAULT_BODY_SIZE
         else:
-            self._check_not_within_bounds(
+            self._check_within_bounds(
                 body_size, self.MIN_BODY_SIZE, self.MAX_BODY_SIZE, 'body_size')
             self.body_size = body_size
 
         if population is None:
             self.population = self.DEFAULT_POPULATION
         else:
-            self._check_not_within_bounds(
+            self._check_within_bounds(
                 population, self.MIN_POPULATION, self.MAX_POPULATION,
                 'population')
             self.population = population
@@ -86,13 +86,13 @@ class Species:
         if traits is None:
             self.traits = []
         else:
-            self._check_not_within_bounds(
+            self._check_within_bounds(
                 len(traits), self.MIN_NUM_TRAITS, self.MAX_NUM_TRAITS,
                 'number of traits')
             self.traits = traits
 
     @staticmethod
-    def _check_not_within_bounds(value, min_value, max_value, value_type):
+    def _check_within_bounds(value, min_value, max_value, value_type):
         """checks that a given value is not within the bounds
 
         :raises: ValueError if value is invalid
