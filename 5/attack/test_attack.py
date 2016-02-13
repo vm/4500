@@ -21,6 +21,7 @@ def test_not_carnivore():
     with pytest.raises(ValueError):
         is_attackable(attacker, defender, None, None)
 
+
 def assert_case(case):
     """checks cases for attacker, defender, and neighbors return result
 
@@ -63,6 +64,7 @@ def json_to_species(json_species):
         'food_supply', Species.DEFAULT_FOOD_SUPPLY)
 
     return species
+
 
 def test_ambush():
     """tests the Ambust trait"""
@@ -193,6 +195,7 @@ def test_hard_shell():
 
     for case in cases:
         assert_case(case)
+
 
 def test_herding():
     """tests the Herding trait"""
