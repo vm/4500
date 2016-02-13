@@ -29,17 +29,20 @@ def is_attackable(attacker, defender, left_neighbor=None, right_neighbor=None):
     situation = Situation(
         mod_attacker, mod_defender, left_neighbor, right_neighbor)
 
-    attacker_prevents = species_prevents_attack(
-        attacker, situation, Role.attacker)
+    attacker_prevents = attacker.prevents_attack(situation, Role.attacker)
+    defender_prevents = defender.prevents_attack(situation, Role.defender)
 
-    defender_prevents = species_prevents_attack(
-        defender, situation, Role.defender)
+    if left_neighbor:
+        left_neighbor_prevents = left_neighbor.prevents_attack(
+            situation, Role.left_neighbor)
+    else:
+        left_neighbor_prevents = False
 
-    left_neighbor_prevents = species_prevents_attack(
-        left_neighbor, situation, Role.left_neighbor)
-
-    right_neighbor_prevents = species_prevents_attack(
-        right_neighbor, situation, Role.right_neighbor)
+    if right_neighbor:
+        right_neighbor_prevents = right_neighbor.prevents_attack(
+            situation, Role.right_neighbor)
+    else:
+        right_neighbor_prevents = False
 
     return not (attacker_prevents or
                 defender_prevents or
@@ -63,27 +66,3 @@ def modify_with_traits(species, is_attacking):
     for trait in species.traits:
         species = trait.modify(species, is_attacking)
     return species
-
-
-def species_prevents_attack(species, situation, role):
-    """whether a species prevents the attack in the situation
-
-    :param species: species
-    :type species: Species or None
-
-    :param situation: situation
-    :type situation: Situation
-
-    :param role: role of the species in the situation
-    :type role: Role
-
-    :returns: whether the species prevents an attack in the situation
-    :rtype: bool
-    """
-
-    if species is None:
-        return False
-
-    return any(
-        trait.prevents_attack(situation, role)
-        for trait in species.traits)

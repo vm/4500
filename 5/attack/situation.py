@@ -124,6 +124,21 @@ class Species:
 
         return any(trait.is_carnivore for trait in self.traits)
 
+    def prevents_attack(self, situation, role):
+        """
+        :param situation: situation
+        :type situation: Situation
+
+        :param role: role of the species in the situation
+        :type role: Role
+
+        :returns: whether the species prevents an attack in the situation
+        :rtype: bool
+        """
+
+        return any(trait.prevents_attack(situation, role)
+                   for trait in self.traits)
+
     def copy(self):
         """makes a copy of itself
 
