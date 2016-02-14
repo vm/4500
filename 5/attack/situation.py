@@ -4,9 +4,25 @@ from enum import Enum
 
 Situation = namedtuple(
     'Situation', ['attacker', 'defender', 'left_neighbor', 'right_neighbor'])
+"""represents a situation in the Evolution game
+
+:param attacker: attacker
+:type attacker: Species
+
+:param defender: defender
+:type defender: Species
+
+:param left_neighbor: left_neighbor
+:type left_neighbor: Species
+
+:param right_neighbor: right_neighbor
+:type right_neighbor: Species
+"""
 
 
 class Role(Enum):
+    """represents roles in a Situation"""
+
     attacker = 'attacker',
     defender = 'defender',
     left_neighbor = 'left_neighbor',
@@ -71,22 +87,38 @@ class Species:
         if body_size is None:
             self.body_size = self.DEFAULT_BODY_SIZE
         else:
-            self._check_valid_body_size(body_size)
+            self._check_within_bounds(
+                body_size, self.MIN_BODY_SIZE, self.MAX_BODY_SIZE, 'body_size')
             self.body_size = body_size
 
         if population is None:
             self.population = self.DEFAULT_POPULATION
         else:
-            self._check_valid_population(population)
+            self._check_within_bounds(
+                population, self.MIN_POPULATION, self.MAX_POPULATION,
+                'population')
             self.population = population
 
         if traits is None:
             self.traits = []
         else:
-            self._check_valid_traits(traits)
+            self._check_within_bounds(
+                len(traits), self.MIN_NUM_TRAITS, self.MAX_NUM_TRAITS,
+                'number of traits')
             self.traits = traits
 
-    def has_trait(self, trait):
+    @staticmethod
+    def _check_within_bounds(value, min_value, max_value, value_type):
+        """checks that a given value is not within the bounds
+
+        :raises: ValueError if value is invalid
+        """
+
+        if not min_value <= value <= max_value:
+            raise ValueError('{} must be in interval [{}, {}]'
+                             .format(value_type, min_value, max_value))
+
+    def has_trait(self, TraitClass):
         """whether the species has the given trait
 
         :param trait: trait to check
@@ -96,7 +128,7 @@ class Species:
         :rtype: bool
         """
 
-        return any(isinstance(t, trait) for t in self.traits)
+        return any(isinstance(t, TraitClass) for t in self.traits)
 
     @property
     def is_carnivore(self):
@@ -108,39 +140,30 @@ class Species:
 
         return any(trait.is_carnivore for trait in self.traits)
 
-    def _check_valid_body_size(self, body_size):
-        """checks that the given body size is valid
+    def prevents_attack(self, situation, role):
+        """
+        :param situation: situation
+        :type situation: Situation
 
-        :raises: ValueError if body_size is invalid
+        :param role: role of the species in the situation
+        :type role: Role
+
+        :returns: whether the species prevents an attack in the situation
+        :rtype: bool
         """
 
-        if body_size < self.MIN_BODY_SIZE or body_size > self.MAX_BODY_SIZE:
-            msg = ('body_size must be in interval [{},{}]'
-                   .format(self.MIN_BODY_SIZE, self.MAX_BODY_SIZE))
-            raise ValueError(msg)
+        return any(trait.prevents_attack(situation, role)
+                   for trait in self.traits)
 
-    def _check_valid_population(self, population):
-        """check that the given population is valid
+    def apply_traits(self, role):
+        """applies trait modifications based on a given role
 
-        :raises: ValueError if population is invalid
+        :param role: role of the species in the situation
+        :type role: Role
         """
 
-        if population < self.MIN_POPULATION or population > self.MAX_POPULATION:
-            msg = ('population must be in interval [{},{}]'
-                   .format(self.MIN_POPULATION, self.MAX_POPULATION))
-            raise ValueError(msg)
-
-    def _check_valid_traits(self, traits):
-        """checks that the traits are valid
-
-        :raises: ValueError if traits are invalid
-        """
-
-        if (len(traits) < self.MIN_NUM_TRAITS or
-                len(traits) > self.MAX_NUM_TRAITS):
-            msg = ('traits must be in range [{},{}]'
-                   .format(self.MIN_NUM_TRAITS, self.MAX_NUM_TRAITS))
-            raise ValueError(msg)
+        for trait in self.traits:
+            trait.modify(self, role)
 
     def copy(self):
         """makes a copy of itself
