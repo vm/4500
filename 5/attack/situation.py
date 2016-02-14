@@ -4,9 +4,25 @@ from enum import Enum
 
 Situation = namedtuple(
     'Situation', ['attacker', 'defender', 'left_neighbor', 'right_neighbor'])
+"""represents a situation in the Evolution game
+
+:param attacker: attacker
+:type attacker: Species
+
+:param defender: defender
+:type defender: Species
+
+:param left_neighbor: left_neighbor
+:type left_neighbor: Species
+
+:param right_neighbor: right_neighbor
+:type right_neighbor: Species
+"""
 
 
 class Role(Enum):
+    """represents roles in a Situation"""
+
     attacker = 'attacker',
     defender = 'defender',
     left_neighbor = 'left_neighbor',
@@ -158,4 +174,3 @@ class Species:
         traits = [t for t in self.traits]
 
         return Species(food_supply, body_size, population, traits)
-

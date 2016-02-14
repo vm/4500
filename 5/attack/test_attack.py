@@ -4,13 +4,6 @@ from attack.attack import is_attackable
 from attack.trait import Trait, trait_name_to_class
 from attack.situation import Species
 
-"""
-TODO
-
-multiple of each trait that counter eachother
-ex: 2 warning call, 1 ambush
-"""
-
 
 def test_not_carnivore():
     """tests that an error is raised when the attacker is not a carnivore"""
