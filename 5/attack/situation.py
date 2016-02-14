@@ -139,12 +139,18 @@ class Species:
         return any(trait.prevents_attack(situation, role)
                    for trait in self.traits)
 
-    def copy(self):
-        """makes a copy of itself
+    def apply_traits(self, role):
+        """applies trait modifications based on a given role
 
-        :returns: copy
-        :rtype: Species
+        :param role: role of the species in the situation
+        :type role: Role
         """
+
+        for trait in self.traits:
+            trait.modify(self, role)
+
+    def copy(self):
+        """makes a copy of itself"""
 
         food_supply = self.food_supply
         body_size = self.body_size
@@ -152,3 +158,4 @@ class Species:
         traits = [t for t in self.traits]
 
         return Species(food_supply, body_size, population, traits)
+

@@ -23,11 +23,14 @@ def is_attackable(attacker, defender, left_neighbor=None, right_neighbor=None):
     if not attacker.is_carnivore:
         raise ValueError('attacker must be a carnivore')
 
-    mod_attacker = modify_with_traits(attacker.copy(), Role.attacker)
-    mod_defender = modify_with_traits(defender.copy(), Role.defender)
+    mut_attacker = attacker.copy()
+    mut_attacker.apply_traits(Role.attacker)
+
+    mut_defender = defender.copy()
+    mut_defender.apply_traits(Role.defender)
 
     situation = Situation(
-        mod_attacker, mod_defender, left_neighbor, right_neighbor)
+        mut_attacker, mut_defender, left_neighbor, right_neighbor)
 
     attacker_prevents = attacker.prevents_attack(situation, Role.attacker)
     defender_prevents = defender.prevents_attack(situation, Role.defender)
@@ -48,21 +51,3 @@ def is_attackable(attacker, defender, left_neighbor=None, right_neighbor=None):
                 defender_prevents or
                 left_neighbor_prevents or
                 right_neighbor_prevents)
-
-
-def modify_with_traits(species, is_attacking):
-    """modifies the species with the modify function of each species trait
-
-    :param species: species to modify
-    :type species: Species
-
-    :param is_attacking: whether the species is attacking
-    :type is_attacking: bool
-
-    :returns: modified species
-    :rtype: Species
-    """
-
-    for trait in species.traits:
-        species = trait.modify(species, is_attacking)
-    return species
