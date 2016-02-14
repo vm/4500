@@ -166,7 +166,11 @@ class Species:
             trait.modify(self, role)
 
     def copy(self):
-        """makes a copy of itself"""
+        """makes a copy of itself
+
+        :returns: copy
+        :rtype: Species
+        """
 
         food_supply = self.food_supply
         body_size = self.body_size
