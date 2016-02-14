@@ -76,7 +76,7 @@ class Species:
         :type population: int
 
         :param traits: traits
-        :type traits: list of TraitCard
+        :type traits: list of Trait
         """
 
         if food_supply is None:
@@ -140,8 +140,19 @@ class Species:
 
         return any(trait.is_carnivore for trait in self.traits)
 
-    def prevents_attack(self, situation, role):
+    @property
+    def max_food_supply(self):
+        """maximum food supply that the species can have
+
+        :returns: max food supply
+        :rtype: int
         """
+
+        return self.population
+
+    def prevents_attack(self, situation, role):
+        """whether the species prevents an attack in the situation
+
         :param situation: situation
         :type situation: Situation
 
