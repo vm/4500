@@ -397,7 +397,7 @@ def test_send():
 
     for ex in examples:
         proxy.send(client_sock, ex)
-        assert str.encode(json.dumps(ex)) == message_queue.get()
+        assert str.encode(json.dumps(ex) + '\n') == message_queue.get()
 
     hand = [[7, 7], [4, 4], [2, 2]]
     deck = [
@@ -413,7 +413,7 @@ def test_send():
 
     for message in messages:
         proxy.send(client_sock, message)
-        assert str.encode(json.dumps(message)) == message_queue.get()
+        assert str.encode(json.dumps(message) + '\n') == message_queue.get()
 
     client_sock.close()
     server_sock.close()

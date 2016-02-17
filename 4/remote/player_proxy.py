@@ -361,7 +361,7 @@ def send(sock, reply):
     :type reply: JSON
     """
 
-    sock.sendall(str.encode(json.dumps(reply)))
+    sock.sendall(str.encode(json.dumps(reply) + '\n'))
 
 
 def json_card_to_internal(json_card):
