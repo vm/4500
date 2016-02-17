@@ -1,0 +1,19 @@
+[
+  [["food", 0],
+   ["body", 0],
+   ["population", 1],
+   ["traits", ["carnivore"]]],
+
+  [["food", 0],
+   ["body", 2],
+   ["population", 1],
+   ["traits", ["symbiosis"]]],
+
+  [["food", 0],
+   ["body", 4],
+   ["population", 1],
+   ["traits", []]],
+
+  false
+
+]

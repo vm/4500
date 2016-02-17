@@ -1,0 +1,14 @@
+[
+  [["food", 0],
+   ["body", 0],
+   ["population", 1],
+   ["traits", ["carnivore"]]],
+
+  [["food", 0],
+   ["body", 1],
+   ["population", 4],
+   ["traits", ["burrowing"]]],
+
+   false,
+   false
+]
