@@ -1,32 +1,29 @@
-from collections import namedtuple
-from enum import Enum
+from traits import Trait
 
 
-Situation = namedtuple(
-    'Situation', ['attacker', 'defender', 'left_neighbor', 'right_neighbor'])
-"""represents a situation in the Evolution game
-
-:param attacker: attacker
-:type attacker: Species
-
-:param defender: defender
-:type defender: Species
-
-:param left_neighbor: left_neighbor
-:type left_neighbor: Species
-
-:param right_neighbor: right_neighbor
-:type right_neighbor: Species
 """
+A LOS is [JSONSpecies+, ..., JSONSpecies+]; the list might be empty.
 
+A JSONSpecies is
+    [["food",Nat],
+     ["body",Nat],
+     ["population",Nat],
+     ["traits",LOT]]
 
-class Role(Enum):
-    """represents roles in a Situation"""
+A JSONSpecies+ is one of:
+    - a regular JSONSpecies
+    - a JSONSpecies with a "fat-food" field:
+        [["food",Nat],
+         ["body",Nat],
+         ["population",Nat],
+         ["traits",LOT]
+         ["fat-food" ,Nat]]
 
-    attacker = 'attacker',
-    defender = 'defender',
-    left_neighbor = 'left_neighbor',
-    right_neighbor = 'right_neighbor'
+A Natural+ is a JSON number interpretable as a natural number larger than,
+or equal to, 1.
+
+A Natural is a JSON number interpretable as a natural number.
+"""
 
 
 class Species:
@@ -52,18 +49,13 @@ class Species:
     MIN_NUM_TRAITS = 0
     MAX_NUM_TRAITS = 3
 
-    DEFAULT_BODY_SIZE = 0
     MIN_BODY_SIZE = 0
     MAX_BODY_SIZE = 7
 
-    DEFAULT_POPULATION = 1
     MIN_POPULATION = 0
     MAX_POPULATION = 7
 
-    DEFAULT_FOOD_SUPPLY = 0
-
-    def __init__(self, food_supply=None, body_size=None,
-                 population=None, traits=None):
+    def __init__(self, food_supply=0, body_size=0, population=1, traits=None):
         """creates a Species
 
         :param food_supply: food supply
@@ -79,25 +71,16 @@ class Species:
         :type traits: list of Trait
         """
 
-        if food_supply is None:
-            self.food_supply = self.DEFAULT_FOOD_SUPPLY
-        else:
-            self.food_supply = food_supply
+        self.food_supply = food_supply
 
-        if body_size is None:
-            self.body_size = self.DEFAULT_BODY_SIZE
-        else:
-            self._check_within_bounds(
-                body_size, self.MIN_BODY_SIZE, self.MAX_BODY_SIZE, 'body_size')
-            self.body_size = body_size
+        self._check_within_bounds(
+            body_size, self.MIN_BODY_SIZE, self.MAX_BODY_SIZE, 'body_size')
+        self.body_size = body_size
 
-        if population is None:
-            self.population = self.DEFAULT_POPULATION
-        else:
-            self._check_within_bounds(
-                population, self.MIN_POPULATION, self.MAX_POPULATION,
-                'population')
-            self.population = population
+        self._check_within_bounds(
+            population, self.MIN_POPULATION, self.MAX_POPULATION,
+            'population')
+        self.population = population
 
         if traits is None:
             self.traits = []
@@ -106,6 +89,66 @@ class Species:
                 len(traits), self.MIN_NUM_TRAITS, self.MAX_NUM_TRAITS,
                 'number of traits')
             self.traits = traits
+
+    @classmethod
+    def from_json(cls, json_species):
+        """creates a Species from a JSON representation
+
+        :param json_species: JSON species
+        :type json_species: JSONSpecies
+
+        :returns: species
+        :rtype: Species
+        """
+
+        [
+            [_, food],
+            [_, body],
+            [_, population],
+            [_, json_traits],
+            *maybe_fat_food
+        ] = json_species
+
+        traits = [Trait.from_json(t) for t in json_traits]
+
+        if maybe_fat_food:
+            [_, fat_food] = maybe_fat_food
+
+            fat_tissue_trait = self._get_fat_tissue_trait()
+            fat_tissue_trait.add_fat_food(fat_food)
+
+        return cls(food, body, population, traits)
+
+    def to_json(self):
+        """creates a JSON representation of the species
+
+        :returns: JSON species
+        :rtype: JSONSpecies
+        """
+
+        json_traits = [t.to_json() for t in self.traits]
+
+        species = [["food", self.food_supply],
+                   ["body", self.body_size],
+                   ["population", self.population],
+                   ["traits", json_traits]]
+
+        if self.has_trait(FatTissue):
+            fat_tissue_trait = self._get_fat_tissue_trait()
+            species.append(["fat-food", fat_tissue_trait.get_fat_food()])
+
+        return species
+
+    def _get_fat_tissue_trait(self):
+        """gets the first fat tissue trait in a list of traits
+
+        required: traits contains a fat tissue trait
+
+        :returns: first fat tissue trait found
+        :rtype: Trait
+        """
+
+        return next(t for t in self.traits if isinstance(t, FatTissueTrait))
 
     @staticmethod
     def _check_within_bounds(value, min_value, max_value, value_type):

@@ -1,18 +1,23 @@
 from collections import namedtuple
 
+from species import Species
+
 
 """
-----------------
-DATA DEFINITIONS
-----------------
-
 a FeedingResult is one of:
     - FatTissueResult
     - VegetarianResult
     - CarnivoreResult
     - None (indicates player does not wish to feed)
-"""
 
+A JSONPlayer is
+    [["id",Natural+],
+     ["species",LOS],
+     ["bag",Natural]]
+
+A LOP is [JSONPlayer, ..., JSONPlayer]; the list might be empty.
+
+"""
 
 FatTissueResult = namedtuple('FatTissueResult', ['species', 'num_tokens'])
 VegetarianResult = namedtuple('VegetarianResult', ['species'])
@@ -32,16 +37,46 @@ class BasePlayer:
     :type _boards: list of Species
     """
 
-    def __init__(self, food_bag):
+    def __init__(self, player_id, species=None, food_bag=0):
         """creates a BasePlayer
 
         :param food_bag: food bag represented by the number of tokens inside
         :type food_bag: int
         """
 
+        self._player_id = player_id
+        self._boards = species if species is not None else []
         self._food_bag = food_bag
         self._cards = []
-        self._boards = []
+
+    @classmethod
+    def from_json(cls, json_player):
+        """creates a Player from a JSON representation
+
+        :param json_player: JSON player
+        :type json_player: JSONPlayer
+
+        :returns: player
+        :rtype: Player
+        """
+
+        [[_, player_id], [_, json_species], [_, bag]] = json_player
+        species = [Species.from_json(s) for s in json_species]
+
+        geturn cls(player_id, species, bag)
+
+    def to_json(self):
+        """creates a JSON representation of the player
+
+        :returns: JSON player
+        :rtype: JSONPlayer
+        """
+
+        json_boards = [b.to_json() for b in self._boards]
+
+        return [["id", self._player_id],
+                ["species", json_boards],
+                ["bag", self._food_bag]]
 
     @property
     def food_bag(self):

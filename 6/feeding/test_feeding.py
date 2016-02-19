@@ -1,162 +1,298 @@
+from feeding.feeding import Feeding
+from feeding.player import Player
+from feeding.species import Species
+from feeding.traits import CarnivoreTrait, FatTissueTrait, HornsTrait
+
+
 """
 FOR ALL TEST HUNGRY/NOT-HUNGRY OF EACH
 ADD TESTS THAT PLAYER DOESN'T VIOLATE BEHAVIORAL CONTRACTS
-
-
-A Feeding is [Player, Natural+, LOP]. The natural number in the middle
-specifies how many tokens of food are left at the watering hole.
-
-A Player is
-    [["id",Natural+],
-     ["species",LOS],
-     ["bag",Natural]]
-
-A LOP is [Player, ..., Player]; the list might be empty.
-
-A LOS is [Species+, ..., Species+]; the list might be empty.
-
-A Natural+ is a JSON number interpretable as a natural number larger than, or
-equal to, 1.
-
-A Natural is a JSON number interpretable as a natural number.
-
-A Species+ is one of:
-a regular Species
-
-a Species with a "fat-food" field:
-    [["food",Nat],
-     ["body",Nat],
-     ["population",Nat],
-     ["traits",LOT]
-     ["fat-food" ,Nat]]
 """
 
-def json_player(player_id, species, bag):
-    """gets a JSON player representation from the given parameters
-
-    :param player_id: player id
-    :type player_id: Natural+
-
-    :param species: list of JSON species
-    :type species: LOS
-
-    :param bag: food bag count
-    :type bag: Natural
-
-    :returns: JSON player representation
-    :rtype: Player
-    """
-
-    return [["id", player_id],
-            ["species", species],
-            ["bag", bag]]
-
-
-def json_species(food, body, population, traits, fat_food=None):
-    """gets a JSON species from the given parameters
-
-    :param food: food supply
-    :type food: Nat
-
-    :param body: body size
-    :type body: Nat
-
-    :param population: population
-    :type population: Nat
-
-    :param traits: traits
-    :type traits: LOT
-
-    :param fat_food: fat food if returned species is a Species+
-    :type fat_food: Nat or None
-
-    :returns: JSON representation of a species
-    :type: Species or Species+
-    """
-
-    species = [["food", food],
-               ["body", body],
-               ["population", population],
-               ["traits", traits]]
-
-    if fat_food is not None:
-        species.append(["fat-food", fat_food])
-
-    return species
-
-# TODO test if fat tissue greater than 0 and fat tissue species chosen, natural
-# in the return is equal to the body size - fat tissue stored
-
-# TODO watering hole has less than max fat tissue cap
 
 def test_fat_tissue_one():
     """If only one species with fat tissue trait, it is selected"""
 
     my_species = [
-        json_species(1, 2, 2, ['fat-tissue'], 0),
-        json_species(1, 2, 2, []),
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[FatTissueTrait(fat_food=0)]),  # THIS ONE
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(2, [json_species(1, 2, 2, [])], 2),
-        json_player(3, [json_species(1, 2, 2, [])], 2),
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+
+
+def test_fat_tissue_nonzero_fat():
+    """If fat tissue greater than 0 and fat tissue species chosen, tokens
+    requested in the return is equal to the body size - fat tissue stored"""
+
+    my_species = [
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[FatTissueTrait(fat_food=1)]),  # THIS ONE
+    ]
+
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 10
+
+    opponents = [
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+
+    # TODO ASSERT EQUAL ONE
+
+
+def test_fat_tissue_max_watering_hole():
+    """The player asks for the number of tokens in the watering hole if it is
+    less than the fat tissue can add"""
+
+    my_species = [
+        Species(
+            food_supply=1,
+            body_size=6,
+            population=2,
+            traits=[FatTissueTrait(fat_food=2)]),  # THIS ONE
+    ]
+
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 2
+
+    opponents = [
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+
+    # TODO ASSERT EQUAL 2
 
 
 def test_fat_tissue_multiple():
-    """If multiple species with fat tissue trait, default to least fat tissue
-    need"""
-    pass
+    """If multiple species with fat tissue trait, default to largest fat
+    tissue need"""
+
+    my_species = [
+        Species(
+            food_supply=1,
+            body_size=5,
+            population=2,
+            traits=[FatTissueTrait(fat_food=4)]),
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[FatTissueTrait(fat_food=0)]),  #THIS ONE
+    ]
+
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 10
+
+    opponents = [
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_fat_tissue_need_tie():
-    """If multiple species and same fat tissue need, defaults to
+    """If multiple species and same fat tissue need, defaults to largest by
     lexicographic ordering"""
-    pass
+
+    my_species = [
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[FatTissueTrait(fat_food=1)]),
+        Species(
+            food_supply=1,
+            body_size=3,
+            population=2,
+            traits=[FatTissueTrait(fat_food=1)]),  #THIS ONE
+    ]
+
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 10
+
+    opponents = [
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_fat_tissue_ordering_tie():
     """If multiple species, same fat tissue need and lexicographic ordering
     tie, default to player board order"""
-    pass
+
+    my_species = [
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,  # THIS ONE
+            traits=[FatTissueTrait(fat_food=1)]),
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[FatTissueTrait(fat_food=1)]),
+    ]
+
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 10
+
+    opponents = [
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_vegetarian_one():
     """If only one vegetarian species, it is selected"""
 
     my_species = [
-        json_species(1, 2, 2, []), #RETURNED
-        json_species(1, 2, 2, ['carnivore']),
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2), # RETURNED
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[CarnivoreTrait()]),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [json_species(1, 2, 2, [])], 2),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_vegetarian_multiple():
-    """If multiple vegetarian species, defaults to lexicographic ordering"""
+    """If multiple vegetarian species, defaults to largest by lexicographic
+    ordering"""
 
     my_species = [
-        json_species(1, 2, 2, []),
-        json_species(1, 3, 2, []),  # RETURNED
+        Species(
+            food_supply=1,
+            body_size=3,
+            population=2), # RETURNED BOY
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [json_species(1, 2, 2, [])], 2),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 # TODO make sure to validate is attackable
@@ -164,36 +300,83 @@ def test_carnivore_largest():
     """Carnivore attacks the largest species that can be attacked"""
 
     my_species = [
-        json_species(1, 2, 2, ['carnivore'])
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[CarnivoreTrait()]),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [
-            json_species(1, 2, 2, []),
-            json_species(1, 3, 2, [])  # THIS ONE
-        ], 2)
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+                Species(
+                    food_supply=1,  # This one
+                    body_size=3,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_carnivore_largest_tie():
     """If multiple species are the same size, defaults to opponent order"""
 
     my_species = [
-        json_species(1, 2, 2, ['carnivore'])
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[CarnivoreTrait()]),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [json_species(1, 2, 2, [])], 3),   # THIS ONE
-        json_player(4, [json_species(1, 2, 2, []]), 3)
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,  # THIS ONE
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=3),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=3),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+
 
 
 def test_carnivore_opponent_order_tie():
@@ -201,40 +384,84 @@ def test_carnivore_opponent_order_tie():
     to the opponent's board order"""
 
     my_species = [
-        json_species(1, 2, 2, ['carnivore'])
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[CarnivoreTrait()]),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [
-            json_species(1, 2, 2, []),    # THIS ONE
-            json_species(1, 2, 2, [])
-        ], 3),
-        json_player(4, [json_species(1, 2, 2, []]), 3)
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,  # THIS ONE
+                    body_size=2,
+                    population=2),
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=3),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=3),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_no_feeding_none_hungry():
     """If nothing can comsume food, returns no feeding"""
 
-    my_species = [
-        json_species(2, 2, 2, ['carnivore'])
-    ]
-
-    me = json_player(1, my_species, 2)
-    watering_hole_tokens = 10
-    opponents = [
-        json_player(3, [
-            json_species(1, 2, 2, []),    # THIS ONE
-            json_species(1, 2, 2, [])
-        ], 3),
-        json_player(4, [json_species(1, 2, 2, []]), 3)
-    ]
-
     feeding = [me, watering_hole_tokens, opponents]
+
+    my_species = [
+        Species(
+            food_supply=2,
+            body_size=2,
+            population=2,
+            traits=[CarnivoreTrait()]),
+        Species(
+            food_supply=2,
+            body_size=2,
+            population=2),
+        Species(
+            food_supply=2,
+            body_size=2,
+            population=2,
+            traits=[FatTissueTrait(fat_food=2)]),
+    ]
+
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 10
+
+    opponents = [
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=3),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_no_feeding_carnivore_cannot_attack():
@@ -242,17 +469,41 @@ def test_no_feeding_carnivore_cannot_attack():
     the opponents' species are attackable, returns no feeding"""
 
     my_species = [
-        json_species(1, 2, 2, ['carnivore'])
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=2,
+            traits=[CarnivoreTrait()]),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [json_species(1, 2, 2, ['hard-shell'])], 3),
-        json_player(4, [json_species(1, 2, 2, ['hard-shell']]), 3)
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2,
+                    traits=[HardShell()]),
+            ],
+            food_bag=3),
+        Player(
+            player_id=3,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2,
+                    traits=[HardShell()]),
+            ],
+            food_bag=3),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
 
 
 def test_no_feeding_carnivore_cannot_attack_horns():
@@ -261,13 +512,28 @@ def test_no_feeding_carnivore_cannot_attack_horns():
     size, returns no feeding"""
 
     my_species = [
-        json_species(1, 2, 1, ['carnivore'])
+        Species(
+            food_supply=0,
+            body_size=2,
+            population=1,
+            traits=[CarnivoreTrait()]),
     ]
 
-    me = json_player(1, my_species, 2)
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
     watering_hole_tokens = 10
+
     opponents = [
-        json_player(3, [json_species(1, 2, 2, ['horns'])], 3)
+        Player(
+            player_id=2,
+            species=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2,
+                    traits=[HornsTrait()]),
+            ],
+            food_bag=2),
     ]
 
-    feeding = [me, watering_hole_tokens, opponents]
+    feeding = Feeding(me, watering_hole_tokens, opponents)
