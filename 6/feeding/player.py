@@ -202,8 +202,11 @@ class BasePlayer:
 
         raise NotImplementedError
 
-    def next_species_to_feed(self, opponents):
+    def next_species_to_feed(self, watering_hole, opponents):
         """determines a player’s next species to be fed
+
+        :param watering_hole: tokens left in the watering hole
+        :type watering_hole: int
 
         :param opponents: opponents
         :type opponents: list of BasePlayer
@@ -238,31 +241,3 @@ class BasePlayer:
         for species in self._boards:
             self._food_bag += species.food_supply
             species.food_supply = 0
-
-
-class Player(BasePlayer):
-    """implementation of a player"""
-
-    def add_board(self, board):
-        raise NotImplementedError
-
-    def move_cards_to_boards(self, opponents):
-        raise NotImplementedError
-
-    def trade_cards_for_boards(self, opponents):
-        raise NotImplementedError
-
-    def trade_cards_for_body_size(self, opponents):
-        raise NotImplementedError
-
-    def trade_cards_for_population(self, opponents):
-        raise NotImplementedError
-
-    def cards_flipped(self):
-        raise NotImplementedError
-
-    def next_species_to_feed(self, opponents):
-        pass
-
-    def select_attack(self, opponents):
-        raise NotImplementedError

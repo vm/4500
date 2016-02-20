@@ -13,7 +13,7 @@ def is_attackable(situation):
 
     attacker, defender, left_neighbor, right_neighbor = situation
 
-    if not attacker.is_carnivore:
+    if not attacker.is_carnivore():
         raise ValueError('attacker must be a carnivore')
 
     mut_attacker = attacker.copy()

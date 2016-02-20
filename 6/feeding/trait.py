@@ -1,4 +1,4 @@
-from attack.situation import Situation, Role
+from feeding.situation import Situation, Role
 
 
 """

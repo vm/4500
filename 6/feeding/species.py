@@ -1,4 +1,4 @@
-from traits import Trait
+from feeding.trait import Trait, FatTissueTrait
 
 
 """
@@ -121,7 +121,7 @@ class Species:
         if maybe_fat_food:
             [_, fat_food] = maybe_fat_food
 
-            fat_tissue_trait = self._get_fat_tissue_trait()
+            fat_tissue_trait = self.get_trait(FatTissueTrait)
             fat_tissue_trait.add_fat_food(fat_food)
 
         return cls(food, body, population, traits)
@@ -140,22 +140,28 @@ class Species:
                    ["population", self.population],
                    ["traits", json_traits]]
 
-        if self.has_trait(FatTissue):
-            fat_tissue_trait = self._get_fat_tissue_trait()
+        fat_tissue_trait = self.get_trait(FatTissueTrait)
+        if (fat_tissue_trait is not None and
+                fat_tissue_trait.get_fat_food() > 0):
             species.append(["fat-food", fat_tissue_trait.get_fat_food()])
 
         return species
 
-    def _get_fat_tissue_trait(self):
-        """gets the first fat tissue trait in a list of traits
+    def get_trait(self, TraitClass):
+        """gets the first trait in a list of traits
 
-        required: traits contains a fat tissue trait
+        :param TraitClass: trait to find
+        :type TraitClass: class Trait
 
-        :returns: first fat tissue trait found
-        :rtype: Trait
+        :returns: first trait found or None if not found
+        :rtype: Trait or None
         """
 
-        return next(t for t in self.traits if isinstance(t, FatTissueTrait))
+        try:
+            return next(t for t in self.traits
+                        if isinstance(t, TraitClass))
+        except StopIteration:
+            return None
 
     @staticmethod
     def _check_within_bounds(value, min_value, max_value, value_type):
@@ -180,7 +186,6 @@ class Species:
 
         return any(isinstance(t, TraitClass) for t in self.traits)
 
-    @property
     def is_carnivore(self):
         """whether the species is a carnivore
 
@@ -189,6 +194,27 @@ class Species:
         """
 
         return any(trait.is_carnivore for trait in self.traits)
+
+    def is_hungry(self):
+        """whether the species is hungry
+
+        :returns: whether the species is hungry
+        :rtype: bool
+        """
+
+        return (self._is_hungry_fat_tissue() or
+                (self.food_supply < self.population))
+
+    def _is_hungry_fat_tissue(self):
+        """whether more food can be stored on fat food
+
+        :returns: whether more food can be stored on fat food
+        :rtype: bool
+        """
+
+        return (
+            self.has_trait(FatTissueTrait) and
+            self.get_trait(FatTissueTrait).get_fat_food() < self.body_size)
 
     @property
     def max_food_supply(self):
