@@ -90,6 +90,13 @@ class Species:
                 'number of traits')
             self.traits = traits
 
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+                self.food_supply == other.food_supply and
+                self.body_size == other.body_size and
+                self.population == other.population and
+                sorted(self.traits) == sorted(other.traits))  # based on ids
+
     @classmethod
     def from_json(cls, json_species):
         """creates a Species from a JSON representation

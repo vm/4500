@@ -1,24 +1,21 @@
+from feeding.attack import is_attackable
 from feeding.feeding import Feeding
 from feeding.player import Player
 from feeding.species import Species
-from feeding.traits import CarnivoreTrait, FatTissueTrait, HornsTrait
+from feeding.trait import CarnivoreTrait, FatTissueTrait, HornsTrait
 
 
-"""
-FOR ALL TEST HUNGRY/NOT-HUNGRY OF EACH
-ADD TESTS THAT PLAYER DOESN'T VIOLATE BEHAVIORAL CONTRACTS
-"""
+def test_fat_tissue_single():
+    """if one species has the Fat Tissue trait, it is selected"""
 
-
-def test_fat_tissue_one():
-    """If only one species with fat tissue trait, it is selected"""
+    selected_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[FatTissueTrait(fat_food=0)])
 
     my_species = [
-        Species(
-            food_supply=1,
-            body_size=2,
-            population=2,
-            traits=[FatTissueTrait(fat_food=0)]),  # THIS ONE
+        selected_species,
         Species(
             food_supply=1,
             body_size=2,
@@ -26,9 +23,10 @@ def test_fat_tissue_one():
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
+    expected_tokens = (selected_species.body_size -
+                       selected_species.traits[0].get_fat_food())
 
     watering_hole_tokens = 10
-
     opponents = [
         Player(
             player_id=2,
@@ -39,8 +37,39 @@ def test_fat_tissue_one():
                     population=2),
             ],
             food_bag=2),
+    ]
+
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = FatTissueResult(selected_species, num_tokens=expected_tokens)
+
+    assert get_feeding_result(feeding) == result
+
+
+def test_fat_tissue_full_vegetarian():
+    """a vegetarian species with a full Fat Tissue trait defaults to
+    vegetarian behavior
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[FatTissueTrait(fat_food=2)])
+
+    my_species = [
+        selected_species,
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=3,
+            traits=[CarnivoreTrait()]),
+    ]
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 2
+    opponents = [
         Player(
-            player_id=3,
+            player_id=2,
             species=[
                 Species(
                     food_supply=1,
@@ -51,24 +80,116 @@ def test_fat_tissue_one():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = VegetarianResult(selected_species)
+
+    assert get_feeding_result(feeding) == result
 
 
-def test_fat_tissue_nonzero_fat():
-    """If fat tissue greater than 0 and fat tissue species chosen, tokens
-    requested in the return is equal to the body size - fat tissue stored"""
+def test_fat_tissue_full_carnivore():
+    """a species with a full Fat Tissue trait and a Carnivore trait
+    defaults to Carnivore behavior and chooses the correct species to attack.
+    in case of a multiple carnivores, chooses largest by lexicographic order.
+    """
+
+    attacking_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=4,
+        traits=[FatTissueTrait(fat_food=2), CarnivoreTrait()])
+
+    my_species = [
+        attacker,
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=3,
+            traits=[CarnivoreTrait()]),
+    ]
+    me = Player(player_id=1, species=my_species, food_bag=2)
+
+    watering_hole_tokens = 10
+
+    defending_species = Species(food_supply=1, body_size=2, population=2)
+    defending_player = Player(player_id=2, species=[defender], food_bag=2)
+    opponents = [defending_player]
+
+    situation = Situation(attacking_species, defending_species, None, None)
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = CarnivoreResult(
+        attacking_species, defending_player, defending_species)
+
+    assert is_attackable(situation)
+    assert get_feeding_result(feeding) == result
+
+
+def test_hungry_carnivore_over_not_hungry_fat_tissue():
+    """a hungry carnivore is chosen over a not-hungry species with the Fat
+    Tissue trait
+    """
+
+    attacking_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[CarnivoreTrait()])
 
     my_species = [
         Species(
             food_supply=1,
             body_size=2,
             population=2,
-            traits=[FatTissueTrait(fat_food=1)]),  # THIS ONE
+            traits=[FatTissueTrait(fat_food=2)]),
+        attacking_species,
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
+    defending_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2)
+    defending_player = Player(
+        player_id=2,
+        species=[defending_species],
+        food_bag=2)
+
+    opponents = [defending_player]
+
+    situation = Situation(attacking_species, defending_species, None, None)
+    feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = CarnivoreResult(
+        attacking_species, defending_player, defending_species)
+
+    assert is_attackable(situation)
+    assert get_feeding_result(feeding) == result
+
+
+def test_fat_tissue_nonzero_fat():
+    """If fat tissue greater than 0 and fat tissue species chosen, tokens
+    requested in the return is equal to the body size - fat tissue stored
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[FatTissueTrait(fat_food=1)])
+
+    my_species = [
+        selected_species,
+        Species(
+            food_supply=1,
+            body_size=2,
+            population=3,
+            traits=[CarnivoreTrait()]),
+    ]
+    me = Player(player_id=1, species=my_species, food_bag=2)
+    expected_tokens = (selected_species.body_size -
+                       selected_species.traits[0].get_fat_food())
+
+    watering_hole_tokens = 10
     opponents = [
         Player(
             player_id=3,
@@ -82,25 +203,36 @@ def test_fat_tissue_nonzero_fat():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = FatTissueResult(selected_species, num_tokens=expected_tokens)
 
-    # TODO ASSERT EQUAL ONE
+    assert get_feeding_result(feeding) == result
 
 
 def test_fat_tissue_max_watering_hole():
     """The player asks for the number of tokens in the watering hole if it is
-    less than the fat tissue can add"""
+    less than the fat tissue can add
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=6,
+        population=2,
+        traits=[FatTissueTrait(fat_food=2)])
 
     my_species = [
-        Species(
+        selected_species,
+         Species(
             food_supply=1,
-            body_size=6,
-            population=2,
-            traits=[FatTissueTrait(fat_food=2)]),  # THIS ONE
+            body_size=2,
+            population=3,
+            traits=[CarnivoreTrait()]),
     ]
-
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 2
+    expected_tokens = min((selected_species.body_size -
+                           selected_species.traits[0].get_fat_food()),
+                          watering_hole_tokens)
 
     opponents = [
         Player(
@@ -115,13 +247,21 @@ def test_fat_tissue_max_watering_hole():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = FatTissueResult(selected_species, expected_tokens)
 
-    # TODO ASSERT EQUAL 2
+    assert get_feeding_result(feeding) == result
 
 
 def test_fat_tissue_multiple():
     """If multiple species with fat tissue trait, default to largest fat
-    tissue need"""
+    tissue need
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[FatTissueTrait(fat_food=0)])
 
     my_species = [
         Species(
@@ -129,16 +269,14 @@ def test_fat_tissue_multiple():
             body_size=5,
             population=2,
             traits=[FatTissueTrait(fat_food=4)]),
-        Species(
-            food_supply=1,
-            body_size=2,
-            population=2,
-            traits=[FatTissueTrait(fat_food=0)]),  #THIS ONE
+        selected_species
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 10
+    expected_tokens = (selected_species.body_size -
+                       selected_species.traits[0].get_fat_food())
 
     opponents = [
         Player(
@@ -153,11 +291,21 @@ def test_fat_tissue_multiple():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = FatTissueResult(selected_species, expected_tokens)
+
+    assert get_feeding_result(feeding) == result
 
 
 def test_fat_tissue_need_tie():
     """If multiple species and same fat tissue need, defaults to largest by
-    lexicographic ordering"""
+    lexicographic ordering
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=3,
+        population=2,
+        traits=[FatTissueTrait(fat_food=1)])
 
     my_species = [
         Species(
@@ -165,16 +313,14 @@ def test_fat_tissue_need_tie():
             body_size=2,
             population=2,
             traits=[FatTissueTrait(fat_food=1)]),
-        Species(
-            food_supply=1,
-            body_size=3,
-            population=2,
-            traits=[FatTissueTrait(fat_food=1)]),  #THIS ONE
+        selected_species,
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 10
+    expected_tokens = (selected_species.body_size -
+                       selected_species.traits[0].get_fat_food())
 
     opponents = [
         Player(
@@ -189,28 +335,36 @@ def test_fat_tissue_need_tie():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = FatTissueResult(selected_species, expected_tokens)
+
+    assert get_feeding_result(feeding) == result
 
 
 def test_fat_tissue_ordering_tie():
     """If multiple species, same fat tissue need and lexicographic ordering
-    tie, default to player board order"""
+    tie, default to player board order
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[FatTissueTrait(fat_food=1)])
 
     my_species = [
         Species(
             food_supply=1,
             body_size=2,
-            population=2,  # THIS ONE
-            traits=[FatTissueTrait(fat_food=1)]),
-        Species(
-            food_supply=1,
-            body_size=2,
             population=2,
             traits=[FatTissueTrait(fat_food=1)]),
+        selected_species,
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 10
+    expected_tokens = (selected_species.body_size -
+                       selected_species.traits[0].get_fat_food())
 
     opponents = [
         Player(
@@ -225,25 +379,29 @@ def test_fat_tissue_ordering_tie():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = FatTissueResult(selected_species, expected_tokens)
+
+    assert get_feeding_result(feeding) == result
 
 
 def test_vegetarian_one():
     """If only one vegetarian species, it is selected"""
 
+    selected_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2)
+
     my_species = [
-        Species(
-            food_supply=1,
-            body_size=2,
-            population=2), # RETURNED
         Species(
             food_supply=1,
             body_size=2,
             population=2,
             traits=[CarnivoreTrait()]),
+        selected_species,
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
-
     watering_hole_tokens = 10
 
     opponents = [
@@ -259,25 +417,30 @@ def test_vegetarian_one():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = VegetarianResult(selected_species)
+
+    assert get_feeding_result(feeding) == result
 
 
 def test_vegetarian_multiple():
     """If multiple vegetarian species, defaults to largest by lexicographic
-    ordering"""
+    ordering
+    """
+
+    selected_species = Species(
+        food_supply=1,
+        body_size=3,
+        population=2)
 
     my_species = [
-        Species(
-            food_supply=1,
-            body_size=3,
-            population=2), # RETURNED BOY
         Species(
             food_supply=1,
             body_size=2,
             population=2),
+        selected_species,
     ]
 
     me = Player(player_id=1, species=my_species, food_bag=2)
-
     watering_hole_tokens = 10
 
     opponents = [
@@ -293,38 +456,48 @@ def test_vegetarian_multiple():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result VegetarianResult(selected_species)
+
+    assert get_feeding_result(feeding) == result
 
 
-# TODO make sure to validate is attackable
 def test_carnivore_largest():
     """Carnivore attacks the largest species that can be attacked"""
 
+    attacking_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2,
+        traits=[CarnivoreTrait()])
+
     my_species = [
+        attacking_species,
         Species(
             food_supply=1,
             body_size=2,
-            population=2,
+            population=3,
             traits=[CarnivoreTrait()]),
     ]
-
     me = Player(player_id=1, species=my_species, food_bag=2)
+
+    defending_species = Species(
+        food_supply=1,
+        body_size=3,
+        population=2)
+    defending_player = Player(
+        player_id=2,
+        species=[
+            Species(
+                food_supply=1,
+                body_size=2,
+                population=2),
+            defending_species,
+        ],
+        food_bag=2)
 
     watering_hole_tokens = 10
 
     opponents = [
-        Player(
-            player_id=2,
-            species=[
-                Species(
-                    food_supply=1,
-                    body_size=2,
-                    population=2),
-                Species(
-                    food_supply=1,  # This one
-                    body_size=3,
-                    population=2),
-            ],
-            food_bag=2),
         Player(
             player_id=3,
             species=[
@@ -336,34 +509,48 @@ def test_carnivore_largest():
             food_bag=2),
     ]
 
+    situation = Situation(attacking_species, defending_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = CarnivoreResult(
+        attacking_species, defending_player, defending_species)
+
+    assert is_attackable(situation)
+    assert get_feeding_result(feeding) == result
 
 
 def test_carnivore_largest_tie():
     """If multiple species are the same size, defaults to opponent order"""
 
+    attacking_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=5,
+        traits=[CarnivoreTrait()])
+
     my_species = [
+        attacking_species,
         Species(
             food_supply=1,
             body_size=2,
-            population=2,
+            population=3,
             traits=[CarnivoreTrait()]),
     ]
-
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
+    defending_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2)
+
+    defending_player = Player(
+        player_id=2,
+        species=[defending_species],
+        food_bag=3)
+
     opponents = [
-        Player(
-            player_id=2,
-            species=[
-                Species(
-                    food_supply=1,  # THIS ONE
-                    body_size=2,
-                    population=2),
-            ],
-            food_bag=3),
+        defending_player,
         Player(
             player_id=3,
             species=[
@@ -375,40 +562,56 @@ def test_carnivore_largest_tie():
             food_bag=3),
     ]
 
+    situation = Situation(attacking_species, defending_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = CarnivoreResult(
+        attacking_species, defending_player, defending_species)
 
+    assert is_attackable(situation)
+    assert get_feeding_result(feeding) == result
 
 
 def test_carnivore_opponent_order_tie():
     """If multiple species are the same size on the same opponent, defaults
-    to the opponent's board order"""
+    to the opponent's board order
+    """
+
+    attacking_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=5,
+        traits=[CarnivoreTrait()])
 
     my_species = [
+        attacking_species,
         Species(
             food_supply=1,
             body_size=2,
-            population=2,
+            population=3,
             traits=[CarnivoreTrait()]),
     ]
-
     me = Player(player_id=1, species=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
+    defending_species = Species(
+        food_supply=1,
+        body_size=2,
+        population=2)
+
+    defending_player = Player(
+        player_id=2,
+        species=[
+            defending_species,
+            Species(
+                food_supply=1,
+                body_size=2,
+                population=2),
+        ],
+        food_bag=3)
+
     opponents = [
-        Player(
-            player_id=2,
-            species=[
-                Species(
-                    food_supply=1,  # THIS ONE
-                    body_size=2,
-                    population=2),
-                Species(
-                    food_supply=1,
-                    body_size=2,
-                    population=2),
-            ],
-            food_bag=3),
+        defending_player,
         Player(
             player_id=3,
             species=[
@@ -420,120 +623,10 @@ def test_carnivore_opponent_order_tie():
             food_bag=3),
     ]
 
+    situation = Situation(attacking_species, defending_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
+    result = CarnivoreResult(
+        attacking_species, defending_player, defending_species)
 
-
-def test_no_feeding_none_hungry():
-    """If nothing can comsume food, returns no feeding"""
-
-    feeding = [me, watering_hole_tokens, opponents]
-
-    my_species = [
-        Species(
-            food_supply=2,
-            body_size=2,
-            population=2,
-            traits=[CarnivoreTrait()]),
-        Species(
-            food_supply=2,
-            body_size=2,
-            population=2),
-        Species(
-            food_supply=2,
-            body_size=2,
-            population=2,
-            traits=[FatTissueTrait(fat_food=2)]),
-    ]
-
-    me = Player(player_id=1, species=my_species, food_bag=2)
-
-    watering_hole_tokens = 10
-
-    opponents = [
-        Player(
-            player_id=3,
-            species=[
-                Species(
-                    food_supply=1,
-                    body_size=2,
-                    population=2),
-            ],
-            food_bag=3),
-    ]
-
-    feeding = Feeding(me, watering_hole_tokens, opponents)
-
-
-def test_no_feeding_carnivore_cannot_attack():
-    """If the the player only has one species which is a carnivore and none of
-    the opponents' species are attackable, returns no feeding"""
-
-    my_species = [
-        Species(
-            food_supply=1,
-            body_size=2,
-            population=2,
-            traits=[CarnivoreTrait()]),
-    ]
-
-    me = Player(player_id=1, species=my_species, food_bag=2)
-
-    watering_hole_tokens = 10
-
-    opponents = [
-        Player(
-            player_id=2,
-            species=[
-                Species(
-                    food_supply=1,
-                    body_size=2,
-                    population=2,
-                    traits=[HardShell()]),
-            ],
-            food_bag=3),
-        Player(
-            player_id=3,
-            species=[
-                Species(
-                    food_supply=1,
-                    body_size=2,
-                    population=2,
-                    traits=[HardShell()]),
-            ],
-            food_bag=3),
-    ]
-
-    feeding = Feeding(me, watering_hole_tokens, opponents)
-
-
-def test_no_feeding_carnivore_cannot_attack_horns():
-    """If the the player only has one species which is a carnivore and
-    only attackable species has horns and player's species has 1 population
-    size, returns no feeding"""
-
-    my_species = [
-        Species(
-            food_supply=0,
-            body_size=2,
-            population=1,
-            traits=[CarnivoreTrait()]),
-    ]
-
-    me = Player(player_id=1, species=my_species, food_bag=2)
-
-    watering_hole_tokens = 10
-
-    opponents = [
-        Player(
-            player_id=2,
-            species=[
-                Species(
-                    food_supply=1,
-                    body_size=2,
-                    population=2,
-                    traits=[HornsTrait()]),
-            ],
-            food_bag=2),
-    ]
-
-    feeding = Feeding(me, watering_hole_tokens, opponents)
+    assert is_attackable(situation)
+    assert get_feeding_result(feeding) == result

@@ -1,27 +1,15 @@
-from collections import namedtuple
-
-from species import Species
-
+from feeding.species import Species
+from feeding.result import (
+    FatTissueResult, VegetarianResult, CarnivoreResult, NoFeedingResult)
 
 """
-a FeedingResult is one of:
-    - FatTissueResult
-    - VegetarianResult
-    - CarnivoreResult
-    - None (indicates player does not wish to feed)
-
 A JSONPlayer is
     [["id",Natural+],
      ["species",LOS],
      ["bag",Natural]]
 
 A LOP is [JSONPlayer, ..., JSONPlayer]; the list might be empty.
-
 """
-
-FatTissueResult = namedtuple('FatTissueResult', ['species', 'num_tokens'])
-VegetarianResult = namedtuple('VegetarianResult', ['species'])
-CarnivoreResult = namedtuple('CarnivoreResult', ['species', 'to_attack'])
 
 
 class BasePlayer:

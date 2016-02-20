@@ -69,6 +69,10 @@ class Trait:
 
         self.tokens = tokens
 
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__) and
+                self.tokens == other.tokens)
+
     @classmethod
     def from_json(cls, json_trait):
         """creates a Trait from a JSON representation
@@ -213,6 +217,9 @@ class FatTissueTrait(Trait):
     def __init__(self, fat_food=DEFAULT_FAT_FOOD):
         super().__init__()
         self._fat_food = fat_food
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self._fat_food == other._fat_food
 
     def get_fat_food(self):
         return self._fat_food
