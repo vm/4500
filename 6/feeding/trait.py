@@ -225,7 +225,7 @@ class FatTissueTrait(Trait):
         return self._fat_food
 
     def add_fat_food(self, tokens):
-        return self._fat_food += tokens
+        self._fat_food += tokens
 
     def reset_fat_food(self):
         self._fat_food = DEFAULT_FAT_FOOD
@@ -297,7 +297,7 @@ class LongNeckTrait(Trait):
 
     Long Neck automatically adds one food token for the entire species when
     the food cards are revealed.
-    """"
+    """
 
     json_name = 'long-neck'
 
@@ -323,7 +323,7 @@ class ScavengerTrait(Trait):
 
     Scavenger automatically eats one food token every time a Carnivore eats
     another species.
-    """"
+    """
 
     json_name = 'scavenger'
 
@@ -368,7 +368,7 @@ class WarningCallTrait(Trait):
                                    right_neighbor.has_trait(WarningCallTrait))
 
         return ((left_neighbor_prevents or right_neighbor_prevents) and
-                not situation.attacker.has_trait(AmbushTrait)
+                not situation.attacker.has_trait(AmbushTrait))
 
 
 ALL_TRAITS = [
