@@ -1,26 +1,19 @@
-from attack.situation import Situation, Role
+from feeding.situation import Situation, Role
 
 
-def is_attackable(attacker, defender, left_neighbor=None, right_neighbor=None):
-    """determines if a species is attackable
+def is_attackable(situation):
+    """determines if the attacker in a situation can attack a defender
 
-    :param attacker: species doing the attacking
-    :type attacker: Species
-
-    :param defender: species being attacked
-    :type defender: Species
-
-    :param left_neighbor: left neighbor of the defending species
-    :type left_neighbor: Species or None
-
-    :param right_neighbor: right neighbor of the defending species
-    :type right_neighbor: Species or None
+    :param situation: situation to evaluate
+    :type situation: Situation
 
     :returns: whether defender is attackable by attacker
     :rtype: bool
     """
 
-    if not attacker.is_carnivore:
+    attacker, defender, left_neighbor, right_neighbor = situation
+
+    if not attacker.is_carnivore():
         raise ValueError('attacker must be a carnivore')
 
     mut_attacker = attacker.copy()
@@ -47,7 +40,7 @@ def is_attackable(attacker, defender, left_neighbor=None, right_neighbor=None):
     else:
         right_neighbor_prevents = False
 
-    return not (attacker_prevents or
-                defender_prevents or
-                left_neighbor_prevents or
-                right_neighbor_prevents)
+    return not any([attacker_prevents,
+                    defender_prevents,
+                    left_neighbor_prevents,
+                    right_neighbor_prevents])

@@ -1,8 +1,9 @@
 import pytest
 
-from attack.attack import is_attackable
-from attack.trait import Trait, trait_name_to_class
-from attack.situation import Species
+from feeding.attack import is_attackable
+from feeding.trait import Trait, ALL_TRAITS
+from feeding.situation import Situation
+from feeding.species import Species
 
 
 def test_not_carnivore():
@@ -12,7 +13,8 @@ def test_not_carnivore():
     defender = Species()
 
     with pytest.raises(ValueError):
-        is_attackable(attacker, defender, None, None)
+        situation = Situation(attacker, defender, None, None)
+        is_attackable(situation)
 
 
 def assert_case(case):
@@ -29,8 +31,9 @@ def assert_case(case):
     left_neighbor = json_to_species(case.get('left_neighbor'))
     right_neighbor = json_to_species(case.get('right_neighbor'))
 
-    assert is_attackable(
-        attacker, defender, left_neighbor, right_neighbor) is result
+    situation = Situation(attacker, defender, left_neighbor, right_neighbor)
+
+    assert is_attackable(situation) is result
 
 
 def json_to_species(json_species):
@@ -41,6 +44,8 @@ def json_to_species(json_species):
 
     species = Species()
 
+    trait_name_to_class = {tc.json_name: tc for tc in ALL_TRAITS}
+
     if 'traits' in json_species:
         num_tokens = 0
         trait_names = json_species['traits']
@@ -49,12 +54,14 @@ def json_to_species(json_species):
             for name in trait_names
         ]
 
+    default_body_size, default_population, default_food_supply = 0, 1, 0
+
     species.body_size = json_species.get(
-        'body_size', Species.DEFAULT_BODY_SIZE)
+        'body_size', default_body_size)
     species.population = json_species.get(
-        'population', Species.DEFAULT_POPULATION)
+        'population', default_population)
     species.food_supply = json_species.get(
-        'food_supply', Species.DEFAULT_FOOD_SUPPLY)
+        'food_supply', default_food_supply)
 
     return species
 
