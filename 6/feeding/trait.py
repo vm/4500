@@ -362,15 +362,15 @@ class WarningCallTrait(Trait):
     def prevents_attack(situation, role):
         attacker, _, left_neighbor, right_neighbor = situation
 
-        left_neighbor_prevents = (role is Role.left_neighbor and
-                                  left_neighbor is not None and
-                                  left_neighbor.has_trait(WarningCallTrait))
+        left_prevents = (role is Role.left_neighbor and
+                         left_neighbor is not None and
+                         left_neighbor.has_trait(WarningCallTrait))
 
-        right_neighbor_prevents = (role is Role.right_neighbor and
-                                   right_neighbor is not None and
-                                   right_neighbor.has_trait(WarningCallTrait))
+        right_prevents = (role is Role.right_neighbor and
+                          right_neighbor is not None and
+                          right_neighbor.has_trait(WarningCallTrait))
 
-        return ((left_neighbor_prevents or right_neighbor_prevents) and
+        return ((left_prevents or right_prevents) and
                 not situation.attacker.has_trait(AmbushTrait))
 
 
