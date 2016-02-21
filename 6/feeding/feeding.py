@@ -9,18 +9,58 @@ from feeding.trait import FatTissueTrait
 from feeding.utils import max_order_preserving, sorted_with_default
 
 
-Feeding = namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])
-"""represents a feeding
-
-:param player: player that is feeding
-:type player: Player
-
-:param watering_hole: number of tokens remaining in the watering hole
-:type watering_hole: int
-
-:param opponents: opponents of the player that is feeding
-:type opponents: list of Player
 """
+A JSONFeeding is [JSONPlayer, Natural+, LOP]. The natural number in the
+middle specifies how many tokens of food are left at the watering hole.
+"""
+
+
+class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
+    """represents a feeding
+
+    :param player: player that is feeding
+    :type player: Player
+
+    :param watering_hole: number of tokens remaining in the watering hole
+    :type watering_hole: int
+
+    :param opponents: opponents of the player that is feeding
+    :type opponents: list of Player
+    """
+
+    @classmethod
+    def from_json(cls, json_feeding):
+        """creates a Feeding from a JSON representation
+
+        :param json_feedingt: JSON feeding
+        :type json_feeding: JSONFeeding
+
+        :returns: feeding
+        :rtype: Feeding
+        """
+
+        [json_player, watering_hole, json_opponents] = json_feeding
+
+        player = Player.from_json(json_player)
+        opponents = [
+            Player.from_json(json_opponent)
+            for json_opponent in json_opponents
+        ]
+
+        return cls(player, watering_hole, opponents)
+
+    def to_json(self):
+        """creates a JSON representation of the feeding
+
+        :returns: JSON feeding
+        :rtype: JSONFeeding
+        """
+
+        return [
+            self.player.to_json(),
+            self.watering_hole,
+            [opponent.to_json() for opponent in self.opponents],
+        ]
 
 
 def get_feeding_result(feeding):
