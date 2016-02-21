@@ -1,6 +1,7 @@
 from feeding.species import Species
 from feeding.result import (
     FatTissueResult, VegetarianResult, CarnivoreResult, NoFeedingResult)
+from feeding.utils import get_or_else
 
 """
 A JSONPlayer is
@@ -216,6 +217,24 @@ class BasePlayer:
         """
 
         raise NotImplementedError
+
+    def get_neighbors(self, species):
+        """get the neighbors of a given species if they exist
+
+        :param species: species to find neighbors of
+        :type species: Species
+
+        :returns: (left neighbor, right neighbor)
+        :rtype: (Species or None, Species or None)
+
+        :raises: ValueError if species not in boards
+        """
+
+        species_index = self.boards.index(species)
+        left_neighbor = get_or_else(self.boards, species_index-1)
+        right_neighbor = get_or_else(self.boards, species_index+1)
+
+        return left_neighbor, right_neighbor
 
     def turn_is_over(self):
         """tells the player that the turn is over"""

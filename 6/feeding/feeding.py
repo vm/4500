@@ -6,8 +6,7 @@ from feeding.result import (
     CarnivoreResult, FatTissueResult, NoFeedingResult, VegetarianResult)
 from feeding.situation import Situation
 from feeding.trait import FatTissueTrait
-from feeding.utils import (
-    get_or_else, max_order_preserving, sorted_with_default)
+from feeding.utils import max_order_preserving, sorted_with_default
 
 
 Feeding = namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])
@@ -160,8 +159,8 @@ class Player(BasePlayer):
         max_species = max_order_preserving(vegetarian_boards)
         return VegetarianResult(max_species)
 
-    @staticmethod
-    def _next_carnivore_to_feed(hungry_boards, opponents):
+    @classmethod
+    def _next_carnivore_to_feed(cls, hungry_boards, opponents):
         """gets a player’s next species to feed that is carnivore if any
 
         chooses based on lexicographic order
@@ -188,29 +187,40 @@ class Player(BasePlayer):
         if not carnivore_boards:
             return None
 
-        sorted_attacker_boards = sorted_with_default(
-            carnivore_boards, range(len(carnivore_boards)))
-
-        boards_opponents = (
+        board_opponent_pairs = (
             (species, opponent)
             for opponent in opponents
             for i, species in enumerate(opponent.boards)
         )
 
+        return cls._choose_attack(carnivore_boards, board_opponent_pairs)
+
+    @staticmethod
+    def _choose_attack(attacker_boards, defender_opponent_pairs):
+        """chooses the best species to attack
+
+        :param attacker_boards: choices to attack
+        :type attacker_boards: list of Species
+
+        :param defender_opponent_pairs: species and its owner
+        :type defender_opponent_pairs: list of (Species, BasePlayer)
+
+        :returns: species to attack if any are attackable
+        :rtype: CarnivoreResult or None
+        """
+
+        sorted_attacker_boards = sorted_with_default(
+            attacker_boards, range(len(attacker_boards)))
+
         sorted_boards_opponents = sorted(
-            boards_opponents,
+            defender_opponent_pairs,
             key=lambda species_opponent: species_opponent[0],
             reverse=True)
 
         for attacker in sorted_attacker_boards:
             for defender, opponent in sorted_boards_opponents:
-
-                defender_index = opponent.boards.index(defender)
-                left_neighbor = get_or_else(opponent.boards, defender_index-1)
-                right_neighbor = get_or_else(opponent.boards, defender_index+1)
-
-                situation = Situation(
-                    attacker, defender, left_neighbor, right_neighbor)
+                left, right = opponent.get_neighbors(defender)
+                situation = Situation(attacker, defender, left, right)
 
                 if is_attackable(situation):
                     return CarnivoreResult(attacker, opponent, defender)
