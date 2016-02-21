@@ -141,7 +141,7 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
 
     my_species = [
         Species(
-            food_supply=1,
+            food_supply=2,
             body_size=2,
             population=2,
             traits=[FatTissueTrait(fat_food=2)]),
@@ -473,7 +473,7 @@ def test_carnivore_largest():
     attacking_species = Species(
         food_supply=1,
         body_size=2,
-        population=2,
+        population=4,
         traits=[CarnivoreTrait()])
 
     my_species = [
@@ -513,6 +513,7 @@ def test_carnivore_largest():
                     population=2),
             ],
             food_bag=2),
+        defending_player,
     ]
 
     situation = Situation(attacking_species, defending_species, None, None)
