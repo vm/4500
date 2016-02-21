@@ -217,24 +217,6 @@ class BasePlayer:
 
         raise NotImplementedError
 
-    def select_attack(self, opponents):
-        """determines who to attack
-
-        player to attack is one of:
-            - index of opponent to attack
-            - None to attack your own species
-
-        species to attack is the index of the species to attack
-
-        :param opponents: opponents' states
-        :type opponents: list of BasePlayer
-
-        :returns: player to attack, species to attack
-        :rtype: int, int
-        """
-
-        raise NotImplementedError
-
     def turn_is_over(self):
         """tells the player that the turn is over"""
 

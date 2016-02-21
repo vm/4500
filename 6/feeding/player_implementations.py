@@ -10,24 +10,6 @@ from feeding.utils import get_or_else, max_order_preserving
 class Player(BasePlayer):
     """implementation of a player"""
 
-    def add_board(self, board):
-        raise NotImplementedError
-
-    def move_cards_to_boards(self, opponents):
-        raise NotImplementedError
-
-    def trade_cards_for_boards(self, opponents):
-        raise NotImplementedError
-
-    def trade_cards_for_body_size(self, opponents):
-        raise NotImplementedError
-
-    def trade_cards_for_population(self, opponents):
-        raise NotImplementedError
-
-    def cards_flipped(self):
-        raise NotImplementedError
-
     def next_species_to_feed(self, watering_hole, opponents):
         hungry_boards = [
             species for species in self.boards
@@ -64,46 +46,54 @@ class Player(BasePlayer):
         :rtype: FatTissueResult or None
         """
 
-        hungry_with_fat_tissue = [
-            species for species in hungry_boards
-            if species.has_trait(FatTissueTrait) and
-                (species.get_trait(FatTissueTrait).get_fat_food() <
-                 species.body_size)
-        ]
+        def get_fat_tissue_food(species):
+            """gets the food stored on the fat tissue trait
 
-        if not hungry_with_fat_tissue:
-            return None
+            :param species: species to get fat tissue need for
+            :type species: Species
 
-        selected_species = None
-        num_with_fat_tissue = len(hungry_with_fat_tissue)
+            :returns: fat food
+            :rtype: int
+            """
+
+            return species.get_trait(FatTissueTrait).get_fat_food()
 
         def get_fat_tissue_need(species):
-            return (species.body_size -
-                    species.get_trait(FatTissueTrait).get_fat_food())
+            """gets the fat tissue need of the species
 
-        if num_with_fat_tissue == 1:
-            selected_species = hungry_with_fat_tissue[0]
+            :param species: species to get fat tissue need for
+            :type species: Species
 
-        if num_with_fat_tissue > 1:
-            sorted_boards_by_need = sorted(
-                hungry_boards,
-                key=get_fat_tissue_need,
-                reverse=True)
+            :returns: fat tissue need
+            :rtype: int
+            """
 
-            most_need = get_fat_tissue_need(sorted_boards_by_need[0])
-            most_needy_boards = [
-                species for species in sorted_boards_by_need
-                if get_fat_tissue_need(species) == most_need
-            ]
+            return species.body_size - get_fat_tissue_food(species)
 
-            selected_species = max(most_needy_boards)
+        selected_species = None
+        need = None
+
+        fat_tissue_boards_needs = [
+            (species, get_fat_tissue_need(species))
+            for species in hungry_boards
+            if species.has_trait(FatTissueTrait) and
+                get_fat_tissue_need(species) > 0
+        ]
+
+        if not fat_tissue_boards_needs:
+            return None
+
+        if len(fat_tissue_boards_needs) == 1:
+            selected_species, need = fat_tissue_boards_needs[0]
+        else:
+            selected_species, need = max(
+                fat_tissue_boards_needs,
+                key=lambda species_need: species_need[1])
 
         if selected_species is not None:
-            fat_tissue_food = (
-                selected_species.get_trait(FatTissueTrait).get_fat_food())
             return FatTissueResult(
                 selected_species,
-                min(get_fat_tissue_need(selected_species), watering_hole))
+                min(need, watering_hole))
 
         return None
 
@@ -192,6 +182,3 @@ class Player(BasePlayer):
                     return CarnivoreResult(attacker, opponent, defender)
 
         return None
-
-    def select_attack(self, opponents):
-        raise NotImplementedError
