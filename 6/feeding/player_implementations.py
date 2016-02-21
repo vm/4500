@@ -4,13 +4,19 @@ from feeding.result import (
     CarnivoreResult, FatTissueResult, NoFeedingResult, VegetarianResult)
 from feeding.situation import Situation
 from feeding.trait import FatTissueTrait
-from feeding.utils import get_or_else, max_order_preserving
+from feeding.utils import (
+    get_or_else, max_order_preserving, sorted_with_default)
 
 
 class Player(BasePlayer):
     """implementation of a player"""
 
     def next_species_to_feed(self, watering_hole, opponents):
+        """chooses the next species to feed
+
+        uses the strategy specified in assignment 6
+        """
+
         hungry_boards = [
             species for species in self.boards
             if species.is_hungry()
@@ -152,28 +158,26 @@ class Player(BasePlayer):
         if not carnivore_boards:
             return None
 
-        sorted_attacker_boards = map(
-            lambda index_board: index_board[1],
-            sorted(
-                enumerate(carnivore_boards),
-                key=lambda index_board: (index_board[1], -index_board[0]),
-                reverse=True))
+        sorted_attacker_boards = sorted_with_default(
+            carnivore_boards, range(len(carnivore_boards)))
 
-        enumerated_boards_and_opponents = [
-            (i, species, opponent)
+        boards_opponents = (
+            (species, opponent)
             for opponent in opponents
             for i, species in enumerate(opponent.boards)
-        ]
+        )
 
-        sorted_defender_index_boards_opponents = sorted(
-            enumerated_boards_and_opponents,
-            key=lambda index_species_opponent: index_species_opponent[1],
+        sorted_boards_opponents = sorted(
+            boards_opponents,
+            key=lambda species_opponent: species_opponent[0],
             reverse=True)
 
         for attacker in sorted_attacker_boards:
-            for index, defender, opponent in sorted_defender_index_boards_opponents:
-                left_neighbor = get_or_else(opponent.boards, index-1)
-                right_neighbor = get_or_else(opponent.boards, index+1)
+            for defender, opponent in sorted_boards_opponents:
+
+                defender_index = opponent.boards.index(defender)
+                left_neighbor = get_or_else(opponent.boards, defender_index-1)
+                right_neighbor = get_or_else(opponent.boards, defender_index+1)
 
                 situation = Situation(
                     attacker, defender, left_neighbor, right_neighbor)

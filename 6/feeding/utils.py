@@ -37,3 +37,24 @@ def get_or_else(xs, maybe_index, default=None):
         return xs[maybe_index]
 
     return default
+
+
+def sorted_with_default(xs, default_order):
+    """sorts the list settling ties with default_order
+
+    :param xs: list to sort
+    :type xs: list of any
+
+    :param default_order: order to default on ties
+    :type default_order: list of int
+
+    :returns: sorted list
+    :rtype: list of any
+    """
+
+    return map(
+        lambda x_default: x_default[0],
+        sorted(
+            zip(xs, reversed(default_order)),
+            key=lambda x_default: (x_default[0], x_default[1]),
+            reverse=True))
