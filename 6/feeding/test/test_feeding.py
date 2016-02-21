@@ -1,6 +1,5 @@
 from feeding.attack import is_attackable
-from feeding.feeding import Feeding, get_feeding_result
-from feeding.player_implementations import Player
+from feeding.feeding import Feeding, get_feeding_result, Player
 from feeding.result import (
     CarnivoreResult, FatTissueResult, NoFeedingResult, VegetarianResult)
 from feeding.situation import Situation
