@@ -1,6 +1,9 @@
 from feeding.attack import is_attackable
-from feeding.feeding import Feeding
-from feeding.player import Player
+from feeding.feeding import Feeding, get_feeding_result
+from feeding.player_implementations import Player
+from feeding.result import (
+    CarnivoreResult, FatTissueResult, NoFeedingResult, VegetarianResult)
+from feeding.situation import Situation
 from feeding.species import Species
 from feeding.trait import CarnivoreTrait, FatTissueTrait, HornsTrait
 
@@ -98,7 +101,7 @@ def test_fat_tissue_full_carnivore():
         traits=[FatTissueTrait(fat_food=2), CarnivoreTrait()])
 
     my_species = [
-        attacker,
+        attacking_species,
         Species(
             food_supply=1,
             body_size=2,
@@ -110,7 +113,10 @@ def test_fat_tissue_full_carnivore():
     watering_hole_tokens = 10
 
     defending_species = Species(food_supply=1, body_size=2, population=2)
-    defending_player = Player(player_id=2, species=[defender], food_bag=2)
+    defending_player = Player(
+        player_id=2,
+        species=[defending_species],
+        food_bag=2)
     opponents = [defending_player]
 
     situation = Situation(attacking_species, defending_species, None, None)
@@ -456,7 +462,7 @@ def test_vegetarian_multiple():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result VegetarianResult(selected_species)
+    result = VegetarianResult(selected_species)
 
     assert get_feeding_result(feeding) == result
 

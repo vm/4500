@@ -97,14 +97,14 @@ class Species:
                 self.population == other.population and
                 sorted(self.traits) == sorted(other.traits))  # based on ids
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         """implements lexicographic comparison by population, food given,
         and plain body size
         """
 
-        return (self.population - other.population or
-                self.food_supply - other.food_supply or
-                self.body_size - other.body_size)
+        return (self.population < other.population or
+                self.food_supply < other.food_supply or
+                self.body_size < other.body_size)
 
     @classmethod
     def from_json(cls, json_species):

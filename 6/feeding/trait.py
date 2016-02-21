@@ -73,6 +73,9 @@ class Trait:
         return (isinstance(other, self.__class__) and
                 self.tokens == other.tokens)
 
+    def __lt__(self, other):
+        return self.json_name < other.json_name
+
     @classmethod
     def from_json(cls, json_trait):
         """creates a Trait from a JSON representation

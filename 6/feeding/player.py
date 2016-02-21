@@ -51,7 +51,7 @@ class BasePlayer:
         [[_, player_id], [_, json_species], [_, bag]] = json_player
         species = [Species.from_json(s) for s in json_species]
 
-        geturn cls(player_id, species, bag)
+        return cls(player_id, species, bag)
 
     def to_json(self):
         """creates a JSON representation of the player
