@@ -200,7 +200,8 @@ class CooperationTrait(Trait):
     """implements a Cooperation trait
 
     Cooperation automatically feeds the species to its right one token of food
-    every time it eats (taken from the common food supply at the watering hole).
+    every time it eats (taken from the common food supply at the watering
+    hole).
     """
 
     json_name = 'cooperation'
@@ -375,7 +376,7 @@ class WarningCallTrait(Trait):
 
 
 ALL_TRAITS = [
-    AmbushTrait ,
+    AmbushTrait,
     BurrowingTrait,
     CarnivoreTrait,
     ClimbingTrait,

@@ -151,8 +151,8 @@ class Player(BasePlayer):
         fat_tissue_boards_needs = [
             (species, get_fat_tissue_need(species))
             for species in hungry_boards
-            if species.has_trait(FatTissueTrait) and
-                get_fat_tissue_need(species) > 0
+            if (species.has_trait(FatTissueTrait) and
+                get_fat_tissue_need(species) > 0)
         ]
 
         if not fat_tissue_boards_needs:

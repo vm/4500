@@ -1,3 +1,5 @@
+import json
+
 from feeding.attack import is_attackable
 from feeding.feeding import Feeding, get_feeding_result, Player
 from feeding.result import (
@@ -226,7 +228,7 @@ def test_fat_tissue_max_watering_hole():
 
     my_species = [
         selected_species,
-         Species(
+        Species(
             food_supply=1,
             body_size=2,
             population=3,

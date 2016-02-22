@@ -98,4 +98,3 @@ class NoFeedingResult:
         """
 
         return False
-

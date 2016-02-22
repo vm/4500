@@ -117,6 +117,14 @@ class Species:
         :rtype: Species
         """
 
+        actual_names = ["food", "bag", "population", "traits"]
+        passed_names = (name for [name, value] in json_species)
+
+        if not len(passed_names) in {4, 5} and all(
+                actual == passed
+                for actual, passed in zip(actual_names, passed_names)):
+            raise ValueError('invalid key on a species')
+
         [
             [_, food],
             [_, body],
@@ -128,9 +136,22 @@ class Species:
         traits = [Trait.from_json(t) for t in json_traits]
 
         if maybe_fat_food:
-            [_, fat_food] = maybe_fat_food
+            [[fat_food_name, fat_food]] = maybe_fat_food
+            if not fat_food_name == "fat-food":
+                raise ValueError('invalid key on fat food')
 
-            fat_tissue_trait = self.get_trait(FatTissueTrait)
+            find_fat_tissue_trait = [
+                trait
+                for trait in traits
+                if isinstance(trait, FatTissueTrait)
+            ]
+
+            if find_fat_tissue_trait:
+                fat_tissue_trait = find_fat_tissue_trait[0]
+            else:
+                raise ValueError('no fat tissue trait found on a species'
+                                 'passing fat food')
+
             fat_tissue_trait.add_fat_food(fat_food)
 
         return cls(food, body, population, traits)
