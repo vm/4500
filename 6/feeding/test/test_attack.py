@@ -1,7 +1,7 @@
 import pytest
 
 from feeding.attack import is_attackable
-from feeding.trait import Trait, ALL_TRAITS
+from feeding.trait import *
 from feeding.situation import Situation
 from feeding.species import Species
 
@@ -17,372 +17,134 @@ def test_not_carnivore():
         is_attackable(situation)
 
 
-def assert_case(case):
-    """checks cases for attacker, defender, and neighbors return result
-
-    :param case: JSON defining a case
-    :type case: dict
-    """
-
-    result = case['result']
-    attacker = json_to_species(case['attacker'])
-    defender = json_to_species(case['defender'])
-
-    left_neighbor = json_to_species(case.get('left_neighbor'))
-    right_neighbor = json_to_species(case.get('right_neighbor'))
-
-    situation = Situation(attacker, defender, left_neighbor, right_neighbor)
-
-    assert is_attackable(situation) is result
-
-
-def json_to_species(json_species):
-    """turns a JSON representation of a species in to a species object"""
-
-    if json_species is None:
-        return None
-
-    species = Species()
-
-    trait_name_to_class = {tc.json_name: tc for tc in ALL_TRAITS}
-
-    if 'traits' in json_species:
-        num_tokens = 0
-        trait_names = json_species['traits']
-        species.traits = [
-            trait_name_to_class[name](num_tokens)
-            for name in trait_names
-        ]
-
-    default_body_size, default_population, default_food_supply = 0, 1, 0
-
-    species.body_size = json_species.get(
-        'body_size', default_body_size)
-    species.population = json_species.get(
-        'population', default_population)
-    species.food_supply = json_species.get(
-        'food_supply', default_food_supply)
-
-    return species
-
-
 def test_ambush():
     """tests the Ambust trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore', 'ambush']
-            },
-            'defender': {
-                'traits': ['warning-call']
-            },
-            'result': True
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore', 'ambush']
-            },
-            'defender': {},
-            'left_neighbor': {
-                'traits': ['warning-call']
-            },
-            'result': True
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore', 'ambush']
-            },
-            'defender': {},
-            'right_neighbor': {
-                'traits': ['warning-call']
-            },
-            'result': True
-        },
-    ]
+    attacker = Species(traits=[CarnivoreTrait(), AmbushTrait()])
+    defender = Species(traits=[WarningCallTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(traits=[CarnivoreTrait(), AmbushTrait()])
+    defender = Species()
+    left_neighbor = Species(traits=[WarningCallTrait()])
+    assert is_attackable(Situation(attacker, defender, left_neighbor, None))
+
+    attacker = Species(traits=[CarnivoreTrait(), AmbushTrait()])
+    defender = Species()
+    right_neighbor = Species(traits=[WarningCallTrait()])
+    assert is_attackable(Situation(attacker, defender, None, right_neighbor))
 
 
 def test_burrowing():
     """tests the Burrowing trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore']
-            },
-            'defender': {
-                'traits': ['burrowing'],
-                'population': 4,
-                'food_supply': 4,
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore']
-            },
-            'defender': {
-                'traits': ['burrowing'],
-                'population': 4,
-                'food_supply': 0,
-            },
-            'result': True,
-        }
-    ]
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(food_supply=4, population=4, traits=[BurrowingTrait()])
+    assert not is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(food_supply=0, population=4, traits=[BurrowingTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
 
 def test_climbing():
     """tests the Climbing trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore']
-            },
-            'defender': {
-                'traits': ['climbing'],
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore', 'climbing']
-            },
-            'defender': {
-                'traits': ['climbing'],
-            },
-            'result': True,
-        },
-    ]
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(traits=[ClimbingTrait()])
+    assert not is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(traits=[CarnivoreTrait(), ClimbingTrait()])
+    defender = Species(traits=[ClimbingTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
 
 def test_hard_shell():
     """tests the Hard Shell trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-                'body_size': 4,
-            },
-            'defender': {
-                'traits': ['hard-shell'],
-                'body_size': 1,
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-                'body_size': 5,
-            },
-            'defender': {
-                'traits': ['hard-shell'],
-                'body_size': 1,
-            },
-            'result': True,
-        },
-    ]
+    attacker = Species(body_size=4, traits=[CarnivoreTrait()])
+    defender = Species(body_size=1, traits=[HardShellTrait()])
+    assert not is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(body_size=5, traits=[CarnivoreTrait()])
+    defender = Species(body_size=1, traits=[HardShellTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
 
 def test_herding():
     """tests the Herding trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-                'population': 3,
-            },
-            'defender': {
-                'traits': ['herding'],
-                'population': 4,
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-                'population': 4,
-            },
-            'defender': {
-                'traits': ['herding'],
-                'population': 4,
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-                'population': 5,
-            },
-            'defender': {
-                'traits': ['herding'],
-                'population': 4,
-            },
-            'result': True,
-        },
-    ]
+    attacker = Species(population=3, traits=[CarnivoreTrait()])
+    defender = Species(population=4, traits=[HerdingTrait()])
+    assert not is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(population=4, traits=[CarnivoreTrait()])
+    defender = Species(population=4, traits=[HerdingTrait()])
+    assert not is_attackable(Situation(attacker, defender, None, None))
+
+    attacker = Species(population=5, traits=[CarnivoreTrait()])
+    defender = Species(population=4, traits=[HerdingTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
 
 def test_pack_hunting():
     """tests the Pack Hunting trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore', 'pack-hunting'],
-                'body_size': 4,
-                'population': 1,
-            },
-            'defender': {
-                'traits': ['hard-shell'],
-                'body_size': 1,
-            },
-            'result': True,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore', 'pack-hunting'],
-                'body_size': 3,
-                'population': 1,
-            },
-            'defender': {
-                'traits': ['hard-shell'],
-                'body_size': 1,
-            },
-            'result': False,
-        },
-    ]
+    attacker = Species(
+        body_size=4,
+        population=1,
+        traits=[CarnivoreTrait(), PackHuntingTrait()])
+    defender = Species(body_size=1, traits=[HardShellTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(
+        body_size=3,
+        population=1,
+        traits=[CarnivoreTrait(), PackHuntingTrait()])
+    defender = Species(body_size=1, traits=[HardShellTrait()])
+    assert not is_attackable(Situation(attacker, defender, None, None))
 
 
 def test_symbiosis():
     """tests the Symbiosis trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {
-                'traits': ['symbiosis'],
-                'body_size': 2,
-            },
-            'right_neighbor': {
-                'body_size': 4,
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {
-                'traits': ['symbiosis'],
-                'body_size': 6,
-            },
-            'right_neighbor': {
-                'body_size': 4,
-            },
-            'result': True,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {
-                'traits': ['symbiosis'],
-                'body_size': 2,
-            },
-            'left_neighbor': {
-                'body_size': 4,
-            },
-            'result': True,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {
-                'traits': ['symbiosis'],
-                'body_size': 2,
-            },
-            'left_neighbor': {
-                'body_size': 4,
-            },
-            'result': True,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {
-                'traits': ['symbiosis'],
-                'body_size': 6,
-            },
-            'left_neighbor': {
-                'body_size': 4,
-            },
-            'result': True,
-        },
-    ]
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(body_size=2, traits=[SymbiosisTrait()])
+    right_neighbor = Species(body_size=4)
+    assert not is_attackable(
+        Situation(attacker, defender, None, right_neighbor))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(body_size=6, traits=[SymbiosisTrait()])
+    right_neighbor = Species(body_size=4)
+    assert is_attackable(Situation(attacker, defender, None, right_neighbor))
+
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(body_size=2, traits=[SymbiosisTrait()])
+    left_neighbor = Species(body_size=4)
+    assert is_attackable(Situation(attacker, defender, left_neighbor, None))
+
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(body_size=6, traits=[SymbiosisTrait()])
+    left_neighbor = Species(body_size=4)
+    assert is_attackable(Situation(attacker, defender, left_neighbor, None))
 
 
 def test_warning_call():
     """tests the Warning Call trait"""
 
-    cases = [
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {
-                'traits': ['warning-call'],
-            },
-            'result': True,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {},
-            'left_neighbor': {
-                'traits': ['warning-call'],
-            },
-            'result': False,
-        },
-        {
-            'attacker': {
-                'traits': ['carnivore'],
-            },
-            'defender': {},
-            'right_neighbor': {
-                'traits': ['warning-call'],
-            },
-            'result': False,
-        },
-    ]
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species(traits=[WarningCallTrait()])
+    assert is_attackable(Situation(attacker, defender, None, None))
 
-    for case in cases:
-        assert_case(case)
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species()
+    left_neighbor = Species(traits=[WarningCallTrait()])
+    assert not is_attackable(
+        Situation(attacker, defender, left_neighbor, None))
+
+    attacker = Species(traits=[CarnivoreTrait()])
+    defender = Species()
+    right_neighbor = Species(traits=[WarningCallTrait()])
+    assert not is_attackable(
+        Situation(attacker, defender, None, right_neighbor))
