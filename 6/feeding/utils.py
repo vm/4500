@@ -1,6 +1,9 @@
 def max_order_preserving(xs):
     """gets the max of a list prefering original ordering in case of ties
 
+    this was written because the builtin max function does not handle ties
+    deterministically
+
     :param xs: elements to get max of
     :type xs: list
 
