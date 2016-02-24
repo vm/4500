@@ -94,6 +94,11 @@ class Species:
             self._check_within_bounds(
                 len(traits), self.MIN_NUM_TRAITS, self.MAX_NUM_TRAITS,
                 'number of traits')
+
+            trait_names = [trait.json_name for trait in traits]
+            if len(trait_names) != len(set(trait_names)):
+                raise ValueError('invalid duplicate traits')
+
             self.traits = traits
 
     def __eq__(self, other):
@@ -147,12 +152,9 @@ class Species:
             *maybe_fat_food
         ] = json_species
 
-        if not (isinstance(json_traits, list) and
-                cls.MIN_NUM_TRAITS < len(json_traits) < cls.MAX_NUM_TRAITS):
+        if not isinstance(json_traits, list):
             raise ValueError('invalid traits')
 
-        if len(json_traits) != len(set(json_traits)):
-            raise ValueError('invalid duplicate traits')
 
         traits = [Trait.from_json(t) for t in json_traits]
 

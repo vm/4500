@@ -261,6 +261,15 @@ def test_fat_tissue_single():
                     population=2),
             ],
             food_bag=2),
+        Player(
+            player_id=6,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
@@ -294,6 +303,15 @@ def test_fat_tissue_full_vegetarian():
     opponents = [
         Player(
             player_id=2,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=6,
             boards=[
                 Species(
                     food_supply=1,
@@ -338,7 +356,18 @@ def test_fat_tissue_full_carnivore():
         player_id=2,
         boards=[defending_species],
         food_bag=2)
-    opponents = [defending_player]
+    opponents = [
+        defending_player,
+        Player(
+            player_id=6,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
 
     situation = Situation(attacking_species, defending_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
@@ -347,6 +376,12 @@ def test_fat_tissue_full_carnivore():
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
+
+    with open('json/1-in.json', 'w') as f1:
+        f1.write(json.dumps(feeding.to_json()))
+
+    with open('json/1-out.json', 'w') as f2:
+        f2.write(json.dumps(result.to_json()))
 
 
 def test_hungry_carnivore_over_not_hungry_fat_tissue():
@@ -382,7 +417,18 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
         boards=[defending_species],
         food_bag=2)
 
-    opponents = [defending_player]
+    opponents = [
+        defending_player,
+        Player(
+            player_id=6,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+    ]
 
     situation = Situation(attacking_species, defending_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
@@ -391,6 +437,12 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
+
+    with open('json/2-in.json', 'w') as f1:
+        f1.write(json.dumps(feeding.to_json()))
+
+    with open('json/2-out.json', 'w') as f2:
+        f2.write(json.dumps(result.to_json()))
 
 
 def test_fat_tissue_nonzero_fat():
@@ -420,6 +472,15 @@ def test_fat_tissue_nonzero_fat():
     opponents = [
         Player(
             player_id=3,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=6,
             boards=[
                 Species(
                     food_supply=1,
@@ -471,12 +532,27 @@ def test_fat_tissue_max_watering_hole():
                     population=2),
             ],
             food_bag=2),
+        Player(
+            player_id=6,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = FatTissueResult(selected_species, expected_tokens)
 
     assert get_feeding_result(feeding) == result
+
+    with open('json/3-in.json', 'w') as f1:
+        f1.write(json.dumps(feeding.to_json()))
+
+    with open('json/3-out.json', 'w') as f2:
+        f2.write(json.dumps(result.to_json()))
 
 
 def test_fat_tissue_multiple():
@@ -508,6 +584,15 @@ def test_fat_tissue_multiple():
     opponents = [
         Player(
             player_id=2,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=6,
             boards=[
                 Species(
                     food_supply=1,
@@ -559,6 +644,15 @@ def test_fat_tissue_need_tie():
                     population=2),
             ],
             food_bag=2),
+        Player(
+            player_id=6,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
@@ -603,12 +697,27 @@ def test_fat_tissue_ordering_tie():
                     population=2),
             ],
             food_bag=2),
+        Player(
+            player_id=6,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = FatTissueResult(selected_species, expected_tokens)
 
     assert get_feeding_result(feeding) == result
+
+    with open('json/5-in.json', 'w') as f1:
+        f1.write(json.dumps(feeding.to_json()))
+
+    with open('json/5-out.json', 'w') as f2:
+        f2.write(json.dumps(result.to_json()))
 
 
 def test_vegetarian_one():
@@ -634,6 +743,15 @@ def test_vegetarian_one():
     opponents = [
         Player(
             player_id=3,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=6,
             boards=[
                 Species(
                     food_supply=1,
@@ -673,6 +791,15 @@ def test_vegetarian_multiple():
     opponents = [
         Player(
             player_id=3,
+            boards=[
+                Species(
+                    food_supply=1,
+                    body_size=2,
+                    population=2),
+            ],
+            food_bag=2),
+        Player(
+            player_id=6,
             boards=[
                 Species(
                     food_supply=1,
@@ -858,3 +985,9 @@ def test_carnivore_opponent_order_tie():
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
+
+    with open('json/4-in.json', 'w') as f1:
+        f1.write(json.dumps(feeding.to_json()))
+
+    with open('json/4-out.json', 'w') as f2:
+        f2.write(json.dumps(result.to_json()))

@@ -18,13 +18,13 @@ middle specifies how many tokens of food are left at the watering hole.
 class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
     """represents a feeding
 
-    :param player: player that is feeding
+    :attr player: player that is feeding
     :type player: Player
 
-    :param watering_hole: number of tokens remaining in the watering hole
+    :attr watering_hole: number of tokens remaining in the watering hole
     :type watering_hole: int
 
-    :param opponents: opponents of the player that is feeding
+    :attr opponents: opponents of the player that is feeding
     :type opponents: list of Player
     """
 
@@ -36,6 +36,34 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
 
     MIN_WATERING_HOLE = 0
     MAX_WATERING_HOLE = float('inf')
+
+    def __new__(cls, player, watering_hole, opponents):
+        """creates a Feeding
+
+        :param player: player that is feeding
+        :type player: Player
+
+        :param watering_hole: number of tokens remaining in the watering hole
+        :type watering_hole: int
+
+        :param opponents: opponents of the player that is feeding
+        :type opponents: list of Player
+        """
+
+        if not (isinstance(watering_hole, int) and
+                cls.MIN_WATERING_HOLE <= watering_hole <= cls.MAX_WATERING_HOLE):
+            raise ValueError('invalid watering hole')
+
+        if not (isinstance(opponents, list) and
+                cls.MIN_OPPONENTS <= len(opponents) <= cls.MAX_OPPONENTS):
+            raise ValueError('invalid opponents')
+
+        opponent_ids = [opp.player_id for opp in opponents]
+        if (player.player_id in opponent_ids or
+                len(opponent_ids) != len(set(opponent_ids))):
+            raise ValueError('invalid duplicate players')
+
+        return super().__new__(cls, player, watering_hole, opponents)
 
     @classmethod
     def from_json(cls, json_feeding):
@@ -53,12 +81,7 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
 
         [json_player, watering_hole, json_opponents] = json_feeding
 
-        if not (isinstance(watering_hole, int) and
-                cls.MIN_WATERING_HOLE < watering_hole < cls.MAX_WATERING_HOLE):
-            raise ValueError('invalid opponents')
-
-        if not (isinstance(json_opponents, list) and
-                cls.MIN_OPPONENTS < len(json_opponents) < cls.MAX_OPPONENTS):
+        if not isinstance(json_opponents, list):
             raise ValueError('invalid opponents')
 
         player = Player.from_json(json_player)
@@ -66,11 +89,6 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
             Player.from_json(json_opponent)
             for json_opponent in json_opponents
         ]
-
-        opponent_ids = [opp.player_id for opp in opponents]
-        if (player.player_id in opponent_ids or
-                len(opponent_ids) != len(set(opponent_ids))):
-            raise ValueError('invalid duplicate players')
 
         return cls(player, watering_hole, opponents)
 
