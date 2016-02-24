@@ -3,6 +3,7 @@ from feeding.result import (
     FatTissueResult, VegetarianResult, CarnivoreResult, NoFeedingResult)
 from feeding.utils import get_or_else
 
+
 """
 A JSONPlayer is
     [["id",Natural+],
@@ -10,11 +11,17 @@ A JSONPlayer is
      ["bag",Natural]]
 
 A LOP is [JSONPlayer, ..., JSONPlayer]; the list might be empty.
+
+A Natural+ is a JSON number interpretable as a natural number larger than,
+or equal to, 1
 """
 
 
 class BasePlayer:
     """base class for a Player
+
+    :attr _player_id: id of the player
+    :type _player_id: Natural+
 
     :attr _food_bag: number of tokens in the food bag
     :type _food_bag: int
@@ -26,15 +33,24 @@ class BasePlayer:
     :type _boards: list of Species
     """
 
-    def __init__(self, player_id, species=None, food_bag=0):
+    MAX_NUM_BOARDS = 3
+    MIN_NUM_BOARDS = 0
+
+    def __init__(self, player_id, boards=None, food_bag=0):
         """creates a BasePlayer
+
+        :param player_id: id of the player
+        :type player_id: Natural+
+
+        :param boards: species boards to be added to player
+        :type boards: list of Species
 
         :param food_bag: food bag represented by the number of tokens inside
         :type food_bag: int
         """
 
         self._player_id = player_id
-        self._boards = species if species is not None else []
+        self._boards = boards if boards is not None else []
         self._food_bag = food_bag
         self._cards = []
 
@@ -48,6 +64,14 @@ class BasePlayer:
         :returns: player
         :rtype: Player
         """
+
+        if not isinstance(json_player, list):
+            raise ValueError('json_player must be a list')
+
+        if not all(
+                isinstance(pair, list) and len(pair) == 2 
+                for pair in json_player):
+            raise ValueError('all json_player entries must be [name, value]')
 
         [[_, player_id], [_, json_species], [_, bag]] = json_player
         species = [Species.from_json(s) for s in json_species]

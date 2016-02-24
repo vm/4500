@@ -1,12 +1,220 @@
 import json
 
+import pytest
+
 from feeding.attack import is_attackable
 from feeding.feeding import Feeding, get_feeding_result, Player
 from feeding.result import (
     CarnivoreResult, FatTissueResult, NoFeedingResult, VegetarianResult)
 from feeding.situation import Situation
 from feeding.species import Species
-from feeding.trait import CarnivoreTrait, FatTissueTrait, HornsTrait
+from feeding.trait import Trait, CarnivoreTrait, FatTissueTrait, HornsTrait
+
+
+MIN_NUM_PLAYERS = 3
+MAX_NUM_PLAYERS = 8
+
+
+def test_invalid_json_feeding():
+    """tests creating a feeding with invalid JSON
+
+    cases:
+        - not a list
+        - wrong number of inputs
+        - wrong input order
+        - wrong types
+            - player
+            - watering hole
+            - opponents
+                - must be at least MIN_NUM_PLAYERS - 1
+                - must be at most MAX_NUM_PLAYERS - 1
+    """
+
+    valid_player = Player(player_id=MAX_NUM_PLAYERS * 2).to_json()
+    valid_watering_hole = 5
+
+    valid_opponents = [
+        Player(player_id=i).to_json()
+        for i in range(int((MAX_NUM_PLAYERS - MIN_NUM_PLAYERS) / 2))
+    ]
+    invalid_few_opponents = valid_opponents[:MIN_NUM_PLAYERS-2]
+    invalid_many_opponents = [
+        Player(player_id=i).to_json()
+        for i in range(MAX_NUM_PLAYERS)
+    ]
+
+    not_a_list = 'hi'
+    with pytest.raises(ValueError):
+        Feeding.from_json(not_a_list)
+
+    wrong_number_of_inputs = ['a', 'b']
+    with pytest.raises(ValueError):
+        Feeding.from_json(wrong_number_of_inputs)
+
+    wrong_input_order = [valid_player, valid_opponents, valid_watering_hole]
+    with pytest.raises(ValueError):
+        Feeding.from_json(wrong_input_order)
+
+    wrong_watering_hole_type = [valid_player, '5', valid_opponents]
+    with pytest.raises(ValueError):
+        Feeding.from_json(wrong_watering_hole_type)
+
+    wrong_opponents_type = [valid_player, valid_watering_hole, 'opponents']
+    with pytest.raises(ValueError):
+        Feeding.from_json(wrong_opponents_type)
+
+    too_few_opponents = [
+        valid_player, valid_watering_hole, invalid_few_opponents
+    ]
+    with pytest.raises(ValueError):
+        Feeding.from_json(too_few_opponents)
+
+    too_many_opponents = [
+        valid_player, valid_watering_hole, invalid_many_opponents
+    ]
+    with pytest.raises(ValueError):
+        Feeding.from_json(too_many_opponents)
+
+    player_in_opponents = [
+            Player(player_id=1).to_json(),
+            valid_watering_hole,
+            valid_opponents[:-1] + [Player(player_id=1).to_json()]
+    ]
+    with pytest.raises(ValueError):
+        Feeding.from_json(player_in_opponents)
+
+    duplicate_opponents = [
+            valid_player,
+            valid_watering_hole,
+            valid_opponents[:-2] + ([Player(player_id=1).to_json()] * 2)
+    ]
+    with pytest.raises(ValueError):
+        Feeding.from_json(duplicate_opponents)
+
+
+def test_invalid_json_player():
+    """tests creating a player with invalid JSON"""
+
+    valid_id = 1
+    valid_boards = []
+    valid_bag = 10
+    too_many_boards = ['board'] * Player.MAX_NUM_BOARDS
+
+    invalid_player_type = 'hi'
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_player_type)
+
+    invalid_number_of_params = ['a', 'b']
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_number_of_params)
+
+    invalid_id_type = ['id', valid_boards, valid_bag]
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_id_type)
+
+    invalid_bag_type = [valid_id, valid_boards, 'bag']
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_bag_type)
+
+    invalid_id_range = [0, valid_boards, valid_bag]
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_id_range)
+
+    invalid_bag_range = [valid_id, valid_boards, -1]
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_bag_range)
+
+    invalid_number_of_boards = [valid_id, too_many_boards, valid_bag]
+    with pytest.raises(ValueError):
+        Player.from_json(invalid_number_of_boards)
+
+
+def test_invalid_json_species():
+    """tests creating a species with invalid JSON"""
+
+    valid_food = ['food', 4]
+    valid_body = ['body', 2]
+    valid_population = ['population', 6]
+    valid_traits = ['traits', ['fat-tissue']]
+    valid_fat_tissue = ['fat-food', 5]
+
+    invalid_species_type = 'species'
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_species_type)
+
+    invalid_num_params = [[], [], []]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_num_params)
+
+    invalid_param_types = [valid_food, valid_body, valid_population, 5]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_param_types)
+
+    invalid_fieldnames = [valid_food, valid_body, valid_population, ['hi', 5]]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_fieldnames)
+
+    fat_tissue_field_without_trait = [
+        valid_food,
+        valid_body,
+        valid_population,
+        ['traits', []],
+        valid_fat_tissue
+    ]
+    with pytest.raises(ValueError):
+        Species.from_json(fat_tissue_field_without_trait)
+
+    invalid_food = [['food', -1], valid_body, valid_population, valid_traits]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_food)
+
+    invalid_body_low = [
+        valid_food,
+        ['body', Species.MIN_BODY_SIZE-1],
+        valid_population,
+        valid_traits
+    ]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_body_low)
+
+    invalid_body_high = [
+        valid_food,
+        ['body', Species.MAX_BODY_SIZE+1],
+        valid_population,
+        valid_traits
+    ]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_body_high)
+
+    invalid_population_low = [
+        valid_food,
+        valid_body,
+        ['population', Species.MIN_POPULATION-1],
+        valid_traits
+    ]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_population_low)
+
+    invalid_population_high = [
+        valid_food,
+        valid_body,
+        ['population', Species.MAX_POPULATION+1],
+        valid_traits
+    ]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_population_high)
+
+
+def test_invalid_json_trait():
+    """tests creating a trait with invalid JSON"""
+
+    invalid_trait_type = None
+    with pytest.raises(ValueError):
+        Trait.from_json(invalid_trait_type)
+
+    invalid_trait_name = 'invalid_trait_name'
+    with pytest.raises(ValueError):
+        Trait.from_json(invalid_trait_name)
 
 
 def test_fat_tissue_single():
@@ -26,7 +234,7 @@ def test_fat_tissue_single():
             population=2),
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
     expected_tokens = (selected_species.body_size -
                        selected_species.traits[0].get_fat_food())
 
@@ -34,7 +242,7 @@ def test_fat_tissue_single():
     opponents = [
         Player(
             player_id=2,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -68,13 +276,13 @@ def test_fat_tissue_full_vegetarian():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 2
     opponents = [
         Player(
             player_id=2,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -109,14 +317,14 @@ def test_fat_tissue_full_carnivore():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
     defending_species = Species(food_supply=1, body_size=2, population=2)
     defending_player = Player(
         player_id=2,
-        species=[defending_species],
+        boards=[defending_species],
         food_bag=2)
     opponents = [defending_player]
 
@@ -149,7 +357,7 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
         attacking_species,
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
@@ -159,7 +367,7 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
         population=2)
     defending_player = Player(
         player_id=2,
-        species=[defending_species],
+        boards=[defending_species],
         food_bag=2)
 
     opponents = [defending_player]
@@ -192,7 +400,7 @@ def test_fat_tissue_nonzero_fat():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
     expected_tokens = (selected_species.body_size -
                        selected_species.traits[0].get_fat_food())
 
@@ -200,7 +408,7 @@ def test_fat_tissue_nonzero_fat():
     opponents = [
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -234,7 +442,7 @@ def test_fat_tissue_max_watering_hole():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 2
     expected_tokens = min((selected_species.body_size -
@@ -244,7 +452,7 @@ def test_fat_tissue_max_watering_hole():
     opponents = [
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -279,7 +487,7 @@ def test_fat_tissue_multiple():
         selected_species
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
     expected_tokens = (selected_species.body_size -
@@ -288,7 +496,7 @@ def test_fat_tissue_multiple():
     opponents = [
         Player(
             player_id=2,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -323,7 +531,7 @@ def test_fat_tissue_need_tie():
         selected_species,
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
     expected_tokens = (selected_species.body_size -
@@ -332,7 +540,7 @@ def test_fat_tissue_need_tie():
     opponents = [
         Player(
             player_id=2,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -367,7 +575,7 @@ def test_fat_tissue_ordering_tie():
         selected_species,
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
     expected_tokens = (selected_species.body_size -
@@ -376,7 +584,7 @@ def test_fat_tissue_ordering_tie():
     opponents = [
         Player(
             player_id=2,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -408,13 +616,13 @@ def test_vegetarian_one():
         selected_species,
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
     watering_hole_tokens = 10
 
     opponents = [
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -447,13 +655,13 @@ def test_vegetarian_multiple():
         selected_species,
     ]
 
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
     watering_hole_tokens = 10
 
     opponents = [
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -485,7 +693,7 @@ def test_carnivore_largest():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     defending_species = Species(
         food_supply=1,
@@ -493,7 +701,7 @@ def test_carnivore_largest():
         population=2)
     defending_player = Player(
         player_id=2,
-        species=[
+        boards=[
             Species(
                 food_supply=1,
                 body_size=2,
@@ -507,7 +715,7 @@ def test_carnivore_largest():
     opponents = [
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -543,7 +751,7 @@ def test_carnivore_largest_tie():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
@@ -554,14 +762,14 @@ def test_carnivore_largest_tie():
 
     defending_player = Player(
         player_id=2,
-        species=[defending_species],
+        boards=[defending_species],
         food_bag=3)
 
     opponents = [
         defending_player,
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,
@@ -598,7 +806,7 @@ def test_carnivore_opponent_order_tie():
             population=3,
             traits=[CarnivoreTrait()]),
     ]
-    me = Player(player_id=1, species=my_species, food_bag=2)
+    me = Player(player_id=1, boards=my_species, food_bag=2)
 
     watering_hole_tokens = 10
 
@@ -609,7 +817,7 @@ def test_carnivore_opponent_order_tie():
 
     defending_player = Player(
         player_id=2,
-        species=[
+        boards=[
             defending_species,
             Species(
                 food_supply=1,
@@ -622,7 +830,7 @@ def test_carnivore_opponent_order_tie():
         defending_player,
         Player(
             player_id=3,
-            species=[
+            boards=[
                 Species(
                     food_supply=1,
                     body_size=2,

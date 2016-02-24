@@ -46,6 +46,9 @@ class Species:
     :inv: MIN_NUM_TRAITS <= len(traits) <= MAX_NUM_TRAITS
     """
 
+    MIN_FOOD_SUPPLY = 0
+    MAX_FOOD_SUPPLY = float('inf')
+
     MIN_NUM_TRAITS = 0
     MAX_NUM_TRAITS = 3
 
@@ -71,6 +74,9 @@ class Species:
         :type traits: list of Trait
         """
 
+        self._check_within_bounds(
+            food_supply, self.MIN_FOOD_SUPPLY, self.MAX_FOOD_SUPPLY,
+            'food_supply')
         self.food_supply = food_supply
 
         self._check_within_bounds(
@@ -117,8 +123,16 @@ class Species:
         :rtype: Species
         """
 
+        if not isinstance(json_species, list):
+            raise ValueError('json_species must be a list')
+
+        if not all(
+                isinstance(pair, list) and len(pair) == 2 
+                for pair in json_species):
+            raise ValueError('all json_species entries must be [name, value]')
+
         actual_names = ["food", "bag", "population", "traits"]
-        passed_names = (name for [name, value] in json_species)
+        passed_names = [name for [name, value] in json_species]
 
         if not len(passed_names) in {4, 5} and all(
                 actual == passed
@@ -132,6 +146,10 @@ class Species:
             [_, json_traits],
             *maybe_fat_food
         ] = json_species
+
+        if not (isinstance(json_traits, list) and
+                cls.MIN_NUM_TRAITS < len(json_traits) < cls.MAX_NUM_TRAITS):
+            raise ValueError('invalid traits')
 
         traits = [Trait.from_json(t) for t in json_traits]
 

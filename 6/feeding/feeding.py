@@ -39,6 +39,14 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
         :rtype: Feeding
         """
 
+        if not isinstance(json_feeding, list):
+            raise ValueError('json_feeding must be a list')
+
+        if not all(
+                isinstance(pair, list) and len(pair) == 2 
+                for pair in json_feeding):
+            raise ValueError('all json_feeding entries must be [name, value]')
+
         [json_player, watering_hole, json_opponents] = json_feeding
 
         player = Player.from_json(json_player)
