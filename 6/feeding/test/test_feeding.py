@@ -204,6 +204,22 @@ def test_invalid_json_species():
     with pytest.raises(ValueError):
         Species.from_json(invalid_population_high)
 
+    duplicate_traits = ['traits', ['carnivore', 'carnivore']]
+    invalid_duplicates = [
+        valid_food,
+        valid_body,
+        valid_population,
+        duplicate_traits
+    ]
+    with pytest.raises(ValueError):
+        Species.from_json(invalid_duplicates)
+
+    Species.from_json([
+        valid_food,
+        valid_body,
+        valid_population,
+        valid_traits,
+    ])
 
 def test_invalid_json_trait():
     """tests creating a trait with invalid JSON"""

@@ -151,6 +151,9 @@ class Species:
                 cls.MIN_NUM_TRAITS < len(json_traits) < cls.MAX_NUM_TRAITS):
             raise ValueError('invalid traits')
 
+        if len(json_traits) != len(set(json_traits)):
+            raise ValueError('invalid duplicate traits')
+
         traits = [Trait.from_json(t) for t in json_traits]
 
         if maybe_fat_food:
