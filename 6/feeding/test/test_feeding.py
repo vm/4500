@@ -11,10 +11,6 @@ from feeding.species import Species
 from feeding.trait import Trait, CarnivoreTrait, FatTissueTrait, HornsTrait
 
 
-MIN_NUM_PLAYERS = 3
-MAX_NUM_PLAYERS = 8
-
-
 def test_invalid_json_feeding():
     """tests creating a feeding with invalid JSON
 
@@ -26,21 +22,21 @@ def test_invalid_json_feeding():
             - player
             - watering hole
             - opponents
-                - must be at least MIN_NUM_PLAYERS - 1
-                - must be at most MAX_NUM_PLAYERS - 1
+                - must be at least MIN_PLAYERS - 1
+                - must be at most MAX_PLAYERS - 1
     """
 
-    valid_player = Player(player_id=MAX_NUM_PLAYERS * 2).to_json()
+    valid_player = Player(player_id=100).to_json()
     valid_watering_hole = 5
 
     valid_opponents = [
         Player(player_id=i).to_json()
-        for i in range(int((MAX_NUM_PLAYERS - MIN_NUM_PLAYERS) / 2))
+        for i in range(Feeding.MAX_PLAYERS - Feeding.MIN_PLAYERS)
     ]
-    invalid_few_opponents = valid_opponents[:MIN_NUM_PLAYERS-2]
+    invalid_few_opponents = valid_opponents[:Feeding.MIN_PLAYERS-2]
     invalid_many_opponents = [
         Player(player_id=i).to_json()
-        for i in range(MAX_NUM_PLAYERS)
+        for i in range(Feeding.MAX_PLAYERS)
     ]
 
     not_a_list = 'hi'

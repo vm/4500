@@ -20,8 +20,8 @@ or equal to, 1
 class BasePlayer:
     """base class for a Player
 
-    :attr _player_id: id of the player
-    :type _player_id: Natural+
+    :attr player_id: id of the player
+    :type player_id: Natural+
 
     :attr _food_bag: number of tokens in the food bag
     :type _food_bag: int
@@ -49,7 +49,7 @@ class BasePlayer:
         :type food_bag: int
         """
 
-        self._player_id = player_id
+        self.player_id = player_id
         self._boards = boards if boards is not None else []
         self._food_bag = food_bag
         self._cards = []
@@ -69,7 +69,7 @@ class BasePlayer:
             raise ValueError('json_player must be a list')
 
         if not all(
-                isinstance(pair, list) and len(pair) == 2 
+                isinstance(pair, list) and len(pair) == 2
                 for pair in json_player):
             raise ValueError('all json_player entries must be [name, value]')
 
@@ -87,7 +87,7 @@ class BasePlayer:
 
         json_boards = [b.to_json() for b in self._boards]
 
-        return [["id", self._player_id],
+        return [["id", self.player_id],
                 ["species", json_boards],
                 ["bag", self._food_bag]]
 

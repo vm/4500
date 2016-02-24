@@ -28,6 +28,15 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
     :type opponents: list of Player
     """
 
+    MIN_PLAYERS = 3
+    MAX_PLAYERS = 8
+
+    MIN_OPPONENTS = MIN_PLAYERS - 1
+    MAX_OPPONENTS = MAX_PLAYERS - 1
+
+    MIN_WATERING_HOLE = 0
+    MAX_WATERING_HOLE = float('inf')
+
     @classmethod
     def from_json(cls, json_feeding):
         """creates a Feeding from a JSON representation
@@ -42,18 +51,26 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
         if not isinstance(json_feeding, list):
             raise ValueError('json_feeding must be a list')
 
-        if not all(
-                isinstance(pair, list) and len(pair) == 2 
-                for pair in json_feeding):
-            raise ValueError('all json_feeding entries must be [name, value]')
-
         [json_player, watering_hole, json_opponents] = json_feeding
+
+        if not (isinstance(watering_hole, int) and
+                cls.MIN_WATERING_HOLE < watering_hole < cls.MAX_WATERING_HOLE):
+            raise ValueError('invalid opponents')
+
+        if not (isinstance(json_opponents, list) and
+                cls.MIN_OPPONENTS < len(json_opponents) < cls.MAX_OPPONENTS):
+            raise ValueError('invalid opponents')
 
         player = Player.from_json(json_player)
         opponents = [
             Player.from_json(json_opponent)
             for json_opponent in json_opponents
         ]
+
+        opponent_ids = [opp.player_id for opp in opponents]
+        if (player.player_id in opponent_ids or
+                len(opponent_ids) != len(set(opponent_ids))):
+            raise ValueError('invalid duplicate players')
 
         return cls(player, watering_hole, opponents)
 
