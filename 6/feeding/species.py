@@ -46,6 +46,9 @@ class Species:
     :inv: MIN_NUM_TRAITS <= len(traits) <= MAX_NUM_TRAITS
     """
 
+    MIN_FOOD_SUPPLY = 0
+    MAX_FOOD_SUPPLY = float('inf')
+
     MIN_NUM_TRAITS = 0
     MAX_NUM_TRAITS = 3
 
@@ -71,6 +74,9 @@ class Species:
         :type traits: list of Trait
         """
 
+        self._check_within_bounds(
+            food_supply, self.MIN_FOOD_SUPPLY, self.MAX_FOOD_SUPPLY,
+            'food_supply')
         self.food_supply = food_supply
 
         self._check_within_bounds(
@@ -88,6 +94,11 @@ class Species:
             self._check_within_bounds(
                 len(traits), self.MIN_NUM_TRAITS, self.MAX_NUM_TRAITS,
                 'number of traits')
+
+            trait_names = [trait.json_name for trait in traits]
+            if len(trait_names) != len(set(trait_names)):
+                raise ValueError('invalid duplicate traits')
+
             self.traits = traits
 
     def __eq__(self, other):
@@ -117,6 +128,22 @@ class Species:
         :rtype: Species
         """
 
+        if not isinstance(json_species, list):
+            raise ValueError('json_species must be a list')
+
+        if not all(
+                isinstance(pair, list) and len(pair) == 2 
+                for pair in json_species):
+            raise ValueError('all json_species entries must be [name, value]')
+
+        actual_names = ["food", "bag", "population", "traits"]
+        passed_names = [name for [name, value] in json_species]
+
+        if not len(passed_names) in {4, 5} and all(
+                actual == passed
+                for actual, passed in zip(actual_names, passed_names)):
+            raise ValueError('invalid key on a species')
+
         [
             [_, food],
             [_, body],
@@ -125,12 +152,29 @@ class Species:
             *maybe_fat_food
         ] = json_species
 
+        if not isinstance(json_traits, list):
+            raise ValueError('invalid traits')
+
+
         traits = [Trait.from_json(t) for t in json_traits]
 
         if maybe_fat_food:
-            [_, fat_food] = maybe_fat_food
+            [[fat_food_name, fat_food]] = maybe_fat_food
+            if not fat_food_name == "fat-food":
+                raise ValueError('invalid key on fat food')
 
-            fat_tissue_trait = self.get_trait(FatTissueTrait)
+            find_fat_tissue_trait = [
+                trait
+                for trait in traits
+                if isinstance(trait, FatTissueTrait)
+            ]
+
+            if find_fat_tissue_trait:
+                fat_tissue_trait = find_fat_tissue_trait[0]
+            else:
+                raise ValueError('no fat tissue trait found on a species'
+                                 'passing fat food')
+
             fat_tissue_trait.add_fat_food(fat_food)
 
         return cls(food, body, population, traits)

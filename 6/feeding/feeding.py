@@ -9,18 +9,101 @@ from feeding.trait import FatTissueTrait
 from feeding.utils import max_order_preserving, sorted_with_default
 
 
-Feeding = namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])
-"""represents a feeding
-
-:param player: player that is feeding
-:type player: Player
-
-:param watering_hole: number of tokens remaining in the watering hole
-:type watering_hole: int
-
-:param opponents: opponents of the player that is feeding
-:type opponents: list of Player
 """
+A JSONFeeding is [JSONPlayer, Natural+, LOP]. The natural number in the
+middle specifies how many tokens of food are left at the watering hole.
+"""
+
+
+class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
+    """represents a feeding
+
+    :attr player: player that is feeding
+    :type player: Player
+
+    :attr watering_hole: number of tokens remaining in the watering hole
+    :type watering_hole: int
+
+    :attr opponents: opponents of the player that is feeding
+    :type opponents: list of Player
+    """
+
+    MIN_PLAYERS = 3
+    MAX_PLAYERS = 8
+
+    MIN_OPPONENTS = MIN_PLAYERS - 1
+    MAX_OPPONENTS = MAX_PLAYERS - 1
+
+    MIN_WATERING_HOLE = 0
+    MAX_WATERING_HOLE = float('inf')
+
+    def __new__(cls, player, watering_hole, opponents):
+        """creates a Feeding
+
+        :param player: player that is feeding
+        :type player: Player
+
+        :param watering_hole: number of tokens remaining in the watering hole
+        :type watering_hole: int
+
+        :param opponents: opponents of the player that is feeding
+        :type opponents: list of Player
+        """
+
+        if not (isinstance(watering_hole, int) and
+                cls.MIN_WATERING_HOLE <= watering_hole <= cls.MAX_WATERING_HOLE):
+            raise ValueError('invalid watering hole')
+
+        if not (isinstance(opponents, list) and
+                cls.MIN_OPPONENTS <= len(opponents) <= cls.MAX_OPPONENTS):
+            raise ValueError('invalid opponents')
+
+        opponent_ids = [opp.player_id for opp in opponents]
+        if (player.player_id in opponent_ids or
+                len(opponent_ids) != len(set(opponent_ids))):
+            raise ValueError('invalid duplicate players')
+
+        return super().__new__(cls, player, watering_hole, opponents)
+
+    @classmethod
+    def from_json(cls, json_feeding):
+        """creates a Feeding from a JSON representation
+
+        :param json_feedingt: JSON feeding
+        :type json_feeding: JSONFeeding
+
+        :returns: feeding
+        :rtype: Feeding
+        """
+
+        if not isinstance(json_feeding, list):
+            raise ValueError('json_feeding must be a list')
+
+        [json_player, watering_hole, json_opponents] = json_feeding
+
+        if not isinstance(json_opponents, list):
+            raise ValueError('invalid opponents')
+
+        player = Player.from_json(json_player)
+        opponents = [
+            Player.from_json(json_opponent)
+            for json_opponent in json_opponents
+        ]
+
+        return cls(player, watering_hole, opponents)
+
+    def to_json(self):
+        """creates a JSON representation of the feeding
+
+        :returns: JSON feeding
+        :rtype: JSONFeeding
+        """
+
+        return [
+            self.player.to_json(),
+            self.watering_hole,
+            [opponent.to_json() for opponent in self.opponents],
+        ]
 
 
 def get_feeding_result(feeding):
@@ -111,8 +194,8 @@ class Player(BasePlayer):
         fat_tissue_boards_needs = [
             (species, get_fat_tissue_need(species))
             for species in hungry_boards
-            if species.has_trait(FatTissueTrait) and
-                get_fat_tissue_need(species) > 0
+            if (species.has_trait(FatTissueTrait) and
+                get_fat_tissue_need(species) > 0)
         ]
 
         if not fat_tissue_boards_needs:
