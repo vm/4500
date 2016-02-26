@@ -1,5 +1,4 @@
 from collections import namedtuple
-from enum import Enum
 
 from feeding.species import Species
 
@@ -49,12 +48,3 @@ class Situation(namedtuple(
             return cls(defender, attacker, left_neighbor, right_neighbor)
         else:
             raise ValueError('not a valid json situation')
-
-
-class Role(Enum):
-    """represents roles in a Situation"""
-
-    defender = 'defender',
-    attacker = 'attacker',
-    left_neighbor = 'left_neighbor',
-    right_neighbor = 'right_neighbor'

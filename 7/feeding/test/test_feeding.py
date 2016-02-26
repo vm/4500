@@ -217,6 +217,7 @@ def test_invalid_json_species():
         valid_traits,
     ])
 
+
 def test_invalid_json_trait():
     """tests creating a trait with invalid JSON"""
 

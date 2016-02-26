@@ -51,7 +51,9 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
         """
 
         if not (isinstance(watering_hole, int) and
-                cls.MIN_WATERING_HOLE <= watering_hole <= cls.MAX_WATERING_HOLE):
+                (cls.MIN_WATERING_HOLE <=
+                    watering_hole <=
+                    cls.MAX_WATERING_HOLE):
             raise ValueError('invalid watering hole')
 
         if not (isinstance(opponents, list) and

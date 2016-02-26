@@ -1,4 +1,5 @@
-from feeding.situation import Situation, Role
+from feeding.role import Role
+from feeding.situation import Situation
 
 
 def is_attackable(situation):

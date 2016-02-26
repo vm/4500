@@ -158,7 +158,6 @@ class Species:
         if not isinstance(json_traits, list):
             raise ValueError('invalid traits')
 
-
         traits = [Trait.from_json(t) for t in json_traits]
 
         if maybe_fat_food:

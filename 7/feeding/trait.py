@@ -1,3 +1,5 @@
+from feeding.role import Role
+
 """
 A JSONTrait is one of:
     - "carnivore"
