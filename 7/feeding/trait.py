@@ -190,7 +190,7 @@ class ClimbingTrait(Trait):
 
     @staticmethod
     def prevents_attack(situation, role):
-        attacker, defender, *_ = situation
+        defender, attacker, *_ = situation
         return (role is Role.defender and
                 defender.has_trait(ClimbingTrait) and
                 not attacker.has_trait(ClimbingTrait))
@@ -265,7 +265,7 @@ class HardShellTrait(Trait):
 
     @staticmethod
     def prevents_attack(situation, role):
-        attacker, defender, *_ = situation
+        defender, attacker, *_ = situation
         return (role is Role.defender and
                 attacker.body_size - 4 < defender.body_size)
 
@@ -281,7 +281,7 @@ class HerdingTrait(Trait):
 
     @staticmethod
     def prevents_attack(situation, role):
-        attacker, defender, *_ = situation
+        defender, attacker, *_ = situation
         return (role is Role.defender and
                 attacker.population <= defender.population)
 
@@ -343,7 +343,7 @@ class SymbiosisTrait(Trait):
 
     @staticmethod
     def prevents_attack(situation, role):
-        attacker, defender, _, right_neighbor = situation
+        defender, attacker, _, right_neighbor = situation
 
         return (role is Role.defender and
                 right_neighbor is not None and
@@ -361,7 +361,7 @@ class WarningCallTrait(Trait):
 
     @staticmethod
     def prevents_attack(situation, role):
-        attacker, _, left_neighbor, right_neighbor = situation
+        _, attacker, left_neighbor, right_neighbor = situation
 
         left_prevents = (role is Role.left_neighbor and
                          left_neighbor is not None and

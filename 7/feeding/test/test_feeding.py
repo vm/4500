@@ -369,19 +369,13 @@ def test_fat_tissue_full_carnivore():
             food_bag=2),
     ]
 
-    situation = Situation(attacking_species, defending_species, None, None)
+    situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
         attacking_species, defending_player, defending_species)
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
-
-    with open('json/1-in.json', 'w') as f1:
-        f1.write(json.dumps(feeding.to_json()))
-
-    with open('json/1-out.json', 'w') as f2:
-        f2.write(json.dumps(result.to_json()))
 
 
 def test_hungry_carnivore_over_not_hungry_fat_tissue():
@@ -430,19 +424,13 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
             food_bag=2),
     ]
 
-    situation = Situation(attacking_species, defending_species, None, None)
+    situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
         attacking_species, defending_player, defending_species)
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
-
-    with open('json/2-in.json', 'w') as f1:
-        f1.write(json.dumps(feeding.to_json()))
-
-    with open('json/2-out.json', 'w') as f2:
-        f2.write(json.dumps(result.to_json()))
 
 
 def test_fat_tissue_nonzero_fat():
@@ -547,12 +535,6 @@ def test_fat_tissue_max_watering_hole():
     result = FatTissueResult(selected_species, expected_tokens)
 
     assert get_feeding_result(feeding) == result
-
-    with open('json/3-in.json', 'w') as f1:
-        f1.write(json.dumps(feeding.to_json()))
-
-    with open('json/3-out.json', 'w') as f2:
-        f2.write(json.dumps(result.to_json()))
 
 
 def test_fat_tissue_multiple():
@@ -713,12 +695,6 @@ def test_fat_tissue_ordering_tie():
 
     assert get_feeding_result(feeding) == result
 
-    with open('json/5-in.json', 'w') as f1:
-        f1.write(json.dumps(feeding.to_json()))
-
-    with open('json/5-out.json', 'w') as f2:
-        f2.write(json.dumps(result.to_json()))
-
 
 def test_vegetarian_one():
     """If only one vegetarian species, it is selected"""
@@ -864,7 +840,7 @@ def test_carnivore_largest():
         defending_player,
     ]
 
-    situation = Situation(attacking_species, defending_species, None, None)
+    situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
         attacking_species, defending_player, defending_species)
@@ -917,7 +893,7 @@ def test_carnivore_largest_tie():
             food_bag=3),
     ]
 
-    situation = Situation(attacking_species, defending_species, None, None)
+    situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
         attacking_species, defending_player, defending_species)
@@ -978,16 +954,10 @@ def test_carnivore_opponent_order_tie():
             food_bag=3),
     ]
 
-    situation = Situation(attacking_species, defending_species, None, None)
+    situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
         attacking_species, defending_player, defending_species)
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
-
-    with open('json/4-in.json', 'w') as f1:
-        f1.write(json.dumps(feeding.to_json()))
-
-    with open('json/4-out.json', 'w') as f2:
-        f2.write(json.dumps(result.to_json()))

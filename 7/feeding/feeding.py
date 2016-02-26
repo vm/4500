@@ -303,7 +303,7 @@ class Player(BasePlayer):
         for attacker in sorted_attacker_boards:
             for defender, opponent in sorted_boards_opponents:
                 left, right = opponent.get_neighbors(defender)
-                situation = Situation(attacker, defender, left, right)
+                situation = Situation(defender, attacker, left, right)
 
                 if is_attackable(situation):
                     return CarnivoreResult(attacker, opponent, defender)

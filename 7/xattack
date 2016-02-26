@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+
+import json
+import sys
+
+from feeding.attack import is_attackable
+from feeding.situation import Situation
+from feeding.species import Species
+
+
+def main():
+    json_situation = json.load(sys.stdin)
+
+    try:
+        situation = Situation.from_json(json_situation)
+        res = is_attackable(situation)
+        print(json.dumps(res))
+    except ValueError:
+        pass
+
+
+if __name__ == '__main__':
+    main()
