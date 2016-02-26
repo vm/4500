@@ -1,6 +1,8 @@
 from collections import namedtuple
 from enum import Enum
 
+from feeding.species import Species
+
 
 class Situation(namedtuple(
         'Situation',

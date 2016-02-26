@@ -1,6 +1,3 @@
-from feeding.situation import Situation, Role
-
-
 """
 A JSONTrait is one of:
     - "carnivore"
