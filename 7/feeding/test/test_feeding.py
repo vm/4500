@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -9,6 +10,18 @@ from feeding.result import (
 from feeding.situation import Situation
 from feeding.species import Species
 from feeding.trait import Trait, CarnivoreTrait, FatTissueTrait, HornsTrait
+
+
+def export(ins, outs, name, path=''):
+    perform_exports = False
+    if perform_exports:
+        input_path = os.path.join(path, name + '-in.json')
+        output_path = os.path.join(path, name + '-out.json')
+
+        with open(input_path, 'w') as fi:
+            json.dump(ins.to_json(), fi)
+        with open(output_path, 'w') as fo:
+            json.dump(outs.to_json(), fo)
 
 
 def test_invalid_json_feeding():
@@ -381,6 +394,8 @@ def test_fat_tissue_full_carnivore():
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
 
+    export(feeding, result, '1')
+
 
 def test_hungry_carnivore_over_not_hungry_fat_tissue():
     """a hungry carnivore is chosen over a not-hungry species with the Fat
@@ -437,6 +452,8 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
+
+    export(feeding, result, '2')
 
 
 def test_fat_tissue_nonzero_fat():
@@ -544,6 +561,7 @@ def test_fat_tissue_max_watering_hole():
 
     assert get_feeding_result(feeding) == result
 
+    export(feeding, result, '3')
 
 def test_fat_tissue_multiple():
     """If multiple species with fat tissue trait, default to largest fat
@@ -706,6 +724,7 @@ def test_fat_tissue_ordering_tie():
 
     assert get_feeding_result(feeding) == result
 
+    export(feeding, result, '5')
 
 def test_vegetarian_one():
     """If only one vegetarian species, it is selected"""
@@ -978,3 +997,5 @@ def test_carnivore_opponent_order_tie():
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
+
+    export(feeding, result, '4')
