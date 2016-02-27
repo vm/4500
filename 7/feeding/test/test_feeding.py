@@ -274,7 +274,8 @@ def test_fat_tissue_single():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = FatTissueResult(selected_species, num_tokens=expected_tokens)
+    result = FatTissueResult(
+        me.boards.index(selected_species), num_tokens=expected_tokens)
 
     assert get_feeding_result(feeding) == result
 
@@ -323,7 +324,7 @@ def test_fat_tissue_full_vegetarian():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = VegetarianResult(selected_species)
+    result = VegetarianResult(me.boards.index(selected_species))
 
     assert get_feeding_result(feeding) == result
 
@@ -373,7 +374,9 @@ def test_fat_tissue_full_carnivore():
     situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
-        attacking_species, defending_player, defending_species)
+        me.boards.index(attacking_species),
+        opponents.index(defending_player),
+        defending_player.boards.index(defending_species))
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
@@ -428,7 +431,9 @@ def test_hungry_carnivore_over_not_hungry_fat_tissue():
     situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
-        attacking_species, defending_player, defending_species)
+        me.boards.index(attacking_species),
+        opponents.index(defending_player),
+        defending_player.boards.index(defending_species))
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
@@ -480,7 +485,8 @@ def test_fat_tissue_nonzero_fat():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = FatTissueResult(selected_species, num_tokens=expected_tokens)
+    result = FatTissueResult(
+        me.boards.index(selected_species), num_tokens=expected_tokens)
 
     assert get_feeding_result(feeding) == result
 
@@ -533,7 +539,8 @@ def test_fat_tissue_max_watering_hole():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = FatTissueResult(selected_species, expected_tokens)
+    result = FatTissueResult(
+        me.boards.index(selected_species), expected_tokens)
 
     assert get_feeding_result(feeding) == result
 
@@ -586,7 +593,8 @@ def test_fat_tissue_multiple():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = FatTissueResult(selected_species, expected_tokens)
+    result = FatTissueResult(
+        me.boards.index(selected_species), expected_tokens)
 
     assert get_feeding_result(feeding) == result
 
@@ -639,7 +647,8 @@ def test_fat_tissue_need_tie():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = FatTissueResult(selected_species, expected_tokens)
+    result = FatTissueResult(
+        me.boards.index(selected_species), expected_tokens)
 
     assert get_feeding_result(feeding) == result
 
@@ -692,7 +701,8 @@ def test_fat_tissue_ordering_tie():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = FatTissueResult(selected_species, expected_tokens)
+    result = FatTissueResult(
+        me.boards.index(selected_species), expected_tokens)
 
     assert get_feeding_result(feeding) == result
 
@@ -739,7 +749,7 @@ def test_vegetarian_one():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = VegetarianResult(selected_species)
+    result = VegetarianResult(me.boards.index(selected_species))
 
     assert get_feeding_result(feeding) == result
 
@@ -787,7 +797,7 @@ def test_vegetarian_multiple():
     ]
 
     feeding = Feeding(me, watering_hole_tokens, opponents)
-    result = VegetarianResult(selected_species)
+    result = VegetarianResult(me.boards.index(selected_species))
 
     assert get_feeding_result(feeding) == result
 
@@ -844,7 +854,9 @@ def test_carnivore_largest():
     situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
-        attacking_species, defending_player, defending_species)
+        me.boards.index(attacking_species),
+        opponents.index(defending_player),
+        defending_player.boards.index(defending_species))
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
@@ -897,7 +909,9 @@ def test_carnivore_largest_tie():
     situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
-        attacking_species, defending_player, defending_species)
+        me.boards.index(attacking_species),
+        opponents.index(defending_player),
+        defending_player.boards.index(defending_species))
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result
@@ -958,7 +972,9 @@ def test_carnivore_opponent_order_tie():
     situation = Situation(defending_species, attacking_species, None, None)
     feeding = Feeding(me, watering_hole_tokens, opponents)
     result = CarnivoreResult(
-        attacking_species, defending_player, defending_species)
+        me.boards.index(attacking_species),
+        opponents.index(defending_player),
+        defending_player.boards.index(defending_species))
 
     assert is_attackable(situation)
     assert get_feeding_result(feeding) == result

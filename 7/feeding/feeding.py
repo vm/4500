@@ -130,6 +130,15 @@ class Player(BasePlayer):
         """chooses the next species to feed
 
         uses the strategy specified in assignment 6
+
+        :param watering_hole: watering hole
+        :type watering_hole: int
+
+        :param opponents: opponents
+        :type opponents: list of BasePlayer
+
+        :returns: result of the feeding
+        :rtype: FeedingResult
         """
 
         hungry_boards = [
@@ -151,13 +160,12 @@ class Player(BasePlayer):
         if carnivore_result is not None:
             return carnivore_result
 
-        return NoFeedingResult()
+        return None
 
-    @staticmethod
-    def _next_fat_tissue_to_feed(hungry_boards, watering_hole):
+    def _next_fat_tissue_to_feed(self, hungry_boards, watering_hole):
         """gets a player’s next species to feed that has fat tissue if any
 
-        :param hungry_boards: boards
+        :param hungry_boards: hungry boards
         :type hungry_boards: list of Species
 
         :param watering_hole: tokens left in the watering hole
@@ -213,13 +221,12 @@ class Player(BasePlayer):
 
         if selected_species is not None:
             return FatTissueResult(
-                selected_species,
+                self.boards.index(selected_species),
                 min(need, watering_hole))
 
         return None
 
-    @staticmethod
-    def _next_vegetarian_to_feed(hungry_boards):
+    def _next_vegetarian_to_feed(self, hungry_boards):
         """gets a player’s next species to feed that is vegetarian if any
 
         chooses based on lexicographic order
@@ -227,7 +234,7 @@ class Player(BasePlayer):
         if two species have the same lexicographic order, returns the first
         in the board order
 
-        :param hungry_boards: boards
+        :param hungry_boards: hungry boards
         :type hungry_boards: list of Species
 
         :returns: vegetarian result or None if not found
@@ -243,10 +250,9 @@ class Player(BasePlayer):
             return None
 
         max_species = max_order_preserving(vegetarian_boards)
-        return VegetarianResult(max_species)
+        return VegetarianResult(self.boards.index(max_species))
 
-    @classmethod
-    def _next_carnivore_to_feed(cls, hungry_boards, opponents):
+    def _next_carnivore_to_feed(self, hungry_boards, opponents):
         """gets a player’s next species to feed that is carnivore if any
 
         chooses based on lexicographic order
@@ -254,7 +260,7 @@ class Player(BasePlayer):
         if two species have the same lexicographic order, returns the first
         in the board order
 
-        :param hungry_boards: species that are hungry
+        :param hungry_boards: hungry boards
         :type hungry_boards: list of Species
 
         :param opponents: opponent players
@@ -264,36 +270,20 @@ class Player(BasePlayer):
         :rtype: carnivoreResult or None
         """
 
-        carnivore_boards = [
+        attacker_boards = [
             species
             for species in hungry_boards
             if species.is_carnivore()
         ]
 
-        if not carnivore_boards:
+        if not attacker_boards:
             return None
 
-        board_opponent_pairs = (
+        defender_opponent_pairs = (
             (species, opponent)
             for opponent in opponents
             for i, species in enumerate(opponent.boards)
         )
-
-        return cls._choose_attack(carnivore_boards, board_opponent_pairs)
-
-    @staticmethod
-    def _choose_attack(attacker_boards, defender_opponent_pairs):
-        """chooses the best species to attack
-
-        :param attacker_boards: choices to attack
-        :type attacker_boards: list of Species
-
-        :param defender_opponent_pairs: species and its owner
-        :type defender_opponent_pairs: list of (Species, BasePlayer)
-
-        :returns: species to attack if any are attackable
-        :rtype: CarnivoreResult or None
-        """
 
         sorted_attacker_boards = sorted_with_default(
             attacker_boards, range(len(attacker_boards)))
@@ -309,6 +299,11 @@ class Player(BasePlayer):
                 situation = Situation(defender, attacker, left, right)
 
                 if is_attackable(situation):
-                    return CarnivoreResult(attacker, opponent, defender)
+                    attacker_index = self.boards.index(attacker)
+                    opponent_index = opponents.index(opponent)
+                    defender_index = opponent.boards.index(defender)
+
+                    return CarnivoreResult(
+                        attacker_index, opponent_index, defender_index)
 
         return None
