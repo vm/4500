@@ -50,10 +50,11 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
         :type opponents: list of Player
         """
 
-        if not (isinstance(watering_hole, int) and
-                (cls.MIN_WATERING_HOLE <=
-                    watering_hole <=
-                    cls.MAX_WATERING_HOLE):
+        is_valid_watering_hole = (
+            isinstance(watering_hole, int) and
+            cls.MIN_WATERING_HOLE <= watering_hole <= cls.MAX_WATERING_HOLE)
+
+        if not is_valid_watering_hole:
             raise ValueError('invalid watering hole')
 
         if not (isinstance(opponents, list) and
