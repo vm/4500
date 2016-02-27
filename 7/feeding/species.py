@@ -125,14 +125,17 @@ class Species:
         :type json_species: JSONSpecies
 
         :returns: species
-        :rtype: Species
+        :rtype: Species or None
         """
+
+        if json_species is False:
+            return None
 
         if not isinstance(json_species, list):
             raise ValueError('json_species must be a list')
 
         if not all(
-                isinstance(pair, list) and len(pair) == 2 
+                isinstance(pair, list) and len(pair) == 2
                 for pair in json_species):
             raise ValueError('all json_species entries must be [name, value]')
 
@@ -154,7 +157,6 @@ class Species:
 
         if not isinstance(json_traits, list):
             raise ValueError('invalid traits')
-
 
         traits = [Trait.from_json(t) for t in json_traits]
 

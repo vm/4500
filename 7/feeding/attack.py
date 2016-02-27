@@ -1,4 +1,5 @@
-from feeding.situation import Situation, Role
+from feeding.role import Role
+from feeding.situation import Situation
 
 
 def is_attackable(situation):
@@ -11,22 +12,22 @@ def is_attackable(situation):
     :rtype: bool
     """
 
-    attacker, defender, left_neighbor, right_neighbor = situation
+    defender, attacker, left_neighbor, right_neighbor = situation
 
     if not attacker.is_carnivore():
         raise ValueError('attacker must be a carnivore')
 
-    mut_attacker = attacker.copy()
-    mut_attacker.apply_traits(Role.attacker)
-
     mut_defender = defender.copy()
     mut_defender.apply_traits(Role.defender)
 
-    situation = Situation(
-        mut_attacker, mut_defender, left_neighbor, right_neighbor)
+    mut_attacker = attacker.copy()
+    mut_attacker.apply_traits(Role.attacker)
 
-    attacker_prevents = attacker.prevents_attack(situation, Role.attacker)
+    situation = Situation(
+        mut_defender, mut_attacker, left_neighbor, right_neighbor)
+
     defender_prevents = defender.prevents_attack(situation, Role.defender)
+    attacker_prevents = attacker.prevents_attack(situation, Role.attacker)
 
     if left_neighbor:
         left_neighbor_prevents = left_neighbor.prevents_attack(
@@ -40,7 +41,7 @@ def is_attackable(situation):
     else:
         right_neighbor_prevents = False
 
-    return not any([attacker_prevents,
-                    defender_prevents,
+    return not any([defender_prevents,
+                    attacker_prevents,
                     left_neighbor_prevents,
                     right_neighbor_prevents])

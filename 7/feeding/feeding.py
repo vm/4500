@@ -50,8 +50,11 @@ class Feeding(namedtuple('Feeding', ['player', 'watering_hole', 'opponents'])):
         :type opponents: list of Player
         """
 
-        if not (isinstance(watering_hole, int) and
-                cls.MIN_WATERING_HOLE <= watering_hole <= cls.MAX_WATERING_HOLE):
+        is_valid_watering_hole = (
+            isinstance(watering_hole, int) and
+            cls.MIN_WATERING_HOLE <= watering_hole <= cls.MAX_WATERING_HOLE)
+
+        if not is_valid_watering_hole:
             raise ValueError('invalid watering hole')
 
         if not (isinstance(opponents, list) and
@@ -303,7 +306,7 @@ class Player(BasePlayer):
         for attacker in sorted_attacker_boards:
             for defender, opponent in sorted_boards_opponents:
                 left, right = opponent.get_neighbors(defender)
-                situation = Situation(attacker, defender, left, right)
+                situation = Situation(defender, attacker, left, right)
 
                 if is_attackable(situation):
                     return CarnivoreResult(attacker, opponent, defender)
