@@ -2,16 +2,14 @@
 
 import json
 import sys
+from itertools import takewhile
+
 
 def run():
     buffer = ''
     count = 0
 
-    while True:
-        chars = sys.stdin.readline()
-        if chars == '':
-            break
-
+    for chars in takewhile(lambda s: s != '', sys.stdin):
         for char in chars.strip():
             buffer += char
             try:
@@ -25,6 +23,7 @@ def run():
                 pass
 
     print('{{"count": {}}}'.format(count))
+
 
 if __name__ == '__main__':
     run()
