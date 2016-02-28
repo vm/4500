@@ -2,11 +2,9 @@ from collections import namedtuple
 
 from feeding.attack import is_attackable
 from feeding.player import BasePlayer
-from feeding.result import (
-    CarnivoreResult, FatTissueResult, NoFeedingResult, VegetarianResult)
+from feeding.result import CarnivoreResult, FatTissueResult, VegetarianResult
 from feeding.situation import Situation
 from feeding.trait import FatTissueTrait
-from feeding.utils import max_order_preserving, sorted_with_default
 
 
 """
@@ -249,7 +247,7 @@ class Player(BasePlayer):
         if not vegetarian_boards:
             return None
 
-        max_species = max_order_preserving(vegetarian_boards)
+        max_species = max(vegetarian_boards)
         return VegetarianResult(self.boards.index(max_species))
 
     def _next_carnivore_to_feed(self, hungry_boards, opponents):
@@ -279,14 +277,13 @@ class Player(BasePlayer):
         if not attacker_boards:
             return None
 
+        sorted_attacker_boards = sorted(attacker_boards, reverse=True)
+
         defender_opponent_pairs = (
             (species, opponent)
             for opponent in opponents
             for i, species in enumerate(opponent.boards)
         )
-
-        sorted_attacker_boards = sorted_with_default(
-            attacker_boards, range(len(attacker_boards)))
 
         sorted_boards_opponents = sorted(
             defender_opponent_pairs,

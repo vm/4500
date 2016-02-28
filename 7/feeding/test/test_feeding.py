@@ -563,6 +563,7 @@ def test_fat_tissue_max_watering_hole():
 
     export(feeding, result, '3')
 
+
 def test_fat_tissue_multiple():
     """If multiple species with fat tissue trait, default to largest fat
     tissue need
@@ -725,6 +726,7 @@ def test_fat_tissue_ordering_tie():
     assert get_feeding_result(feeding) == result
 
     export(feeding, result, '5')
+
 
 def test_vegetarian_one():
     """If only one vegetarian species, it is selected"""

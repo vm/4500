@@ -5,7 +5,6 @@ import sys
 
 from feeding.attack import is_attackable
 from feeding.situation import Situation
-from feeding.species import Species
 
 
 def main():
