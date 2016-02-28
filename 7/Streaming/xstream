@@ -9,20 +9,61 @@ def run():
     buffer = ''
     count = 0
 
-    for chars in takewhile(lambda s: s != '', sys.stdin):
-        for char in chars.strip():
-            buffer += char
+    for line in map(str.strip, sys.stdin):
+        for curr, remain in reversed(accumulate_with_remainder(line)):
             try:
-                json.loads(buffer)
-                print(buffer)
+                tmp = buffer + curr
+                json.loads(tmp)
+                print(tmp)
 
-                buffer = ''
+                buffer = remain
                 count += 1
+                break
 
             except ValueError:
                 pass
+        else:
+            buffer += line
 
-    print('{{"count": {}}}'.format(count))
+    print(json.dumps({'count': count}))
+
+
+def accumulate_with_remainder(xs):
+    """implements accumulate while also returning the remainder
+
+    example:
+    >>> accumulate_with_remainder([1,2,3])
+    [
+        ([], [1,2,3]),
+        ([1], [2,3]),
+        ([1,2], [3]),
+        ([1,2,3], [])
+    ]
+
+    :param xs: list to accumulate
+    :type xs: list
+
+    :returns: list of (accumulated elements, remaining elements)
+    :rtype: list of (iterable, iterable)
+    """
+
+    return [split_at(i, xs) for i in range(len(xs)+1)]
+
+
+def split_at(i, xs):
+    """splits xs at i
+
+    :param i: index to split at
+    :type i: int
+
+    :param xs: list to split
+    :type xs: list
+
+    :returns: first i elements, remaining elements
+    :rtype: (list, list)
+    """
+
+    return xs[:i], xs[i:]
 
 
 if __name__ == '__main__':
